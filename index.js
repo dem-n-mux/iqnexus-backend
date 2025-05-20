@@ -22,6 +22,7 @@ import { School } from "./school.js";
 import { convertXlsxToMongoDbForSchool } from "./excelToMongoForSchool.js";
 import { Admin } from "./admin.js";
 import { Int32 } from "mongodb";
+import { MongoClient, GridFSBucket, ObjectId } from "mongodb";
 
 dotenv.config();
 
@@ -142,30 +143,128 @@ app.post("/students", async (req, res) => {
   }
 });
 
-// Tushar
-app.post("/allStudents", async (req, res) => {
-  const { schoolCode, class: cls, section, exam, examLevel } = req.body;
+// Simulated database query function (replace with actual MongoDB query)
+async function getAdmitCardStudentsByFilters(schoolCode, examLevel, page, limit) {
+  const skip = (page - 1) * limit;
 
-  if (!schoolCode || !cls || !section || !exam || !examLevel) {
-    return res.status(400).json({ message: 'Missing required fields' });
+  // Build MongoDB query
+  const query = {};
+  if (schoolCode) query.schoolCode = schoolCode;
+
+  // Filter based on examLevel (L1 or L2 participation)
+  if (examLevel === "L1") {
+    query.$or = [
+      { IAOL1: "1" },
+      { ITSTL1: "1" },
+      { IMOL1: "1" },
+      { IGKOL1: "1" },
+      { IENGOL1: "1" },
+    ];
+  } else if (examLevel === "L2") {
+    query.$or = [
+      { IAOL2: "1" },
+      { ITSTL2: "1" },
+      { IMOL2: "1" },
+      { IENGOL2: "1" },
+    ];
   }
 
-  const school = await School.findOne({ schoolCode: schoolCode });
+  // Simulated MongoDB query (replace with actual database call)
+  const totalStudents = await STUDENT_LATEST.countDocuments(query);
+  const students = await STUDENT_LATEST.find(query)
+    .skip(skip)
+    .limit(limit)
+    .select("rollNo schoolCode class section studentName IAOL1 ITSTL1 IMOL1 IGKOL1 IENGOL1 IAOL2 ITSTL2 IMOL2 IENGOL2");
+
+  const totalPages = Math.ceil(totalStudents / limit);
+
+  return {
+    data: students,
+    totalPages,
+    totalStudents,
+  };
+}
+
+app.post("/admit-card-students", async (req, res) => {
+  try {
+    const { schoolCode, examLevel /*, session */ } = req.body;
+    const { page = 1, limit = 10 } = req.query;
+
+    const schoolCodeNumber = schoolCode ? parseInt(schoolCode) : undefined;
+    if (schoolCode && isNaN(schoolCodeNumber)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid school code: must be a number" });
+    }
+
+    if (examLevel && !["L1", "L2"].includes(examLevel)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid exam level: must be L1 or L2" });
+    }
+
+    const students = await getAdmitCardStudentsByFilters(
+      schoolCodeNumber,
+      examLevel,
+      Number(page),
+      Number(limit)
+    );
+
+    if (students.data.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No students found matching the criteria",
+        data: [],
+        totalPages: 0,
+        currentPage: Number(page),
+        totalStudents: 0,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: students.data,
+      totalPages: students.totalPages,
+      currentPage: Number(page),
+      totalStudents: students.totalStudents,
+    });
+  } catch (error) {
+    console.error("❌ Error in admit-card-students route:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Tushar
+app.post("/allStudents", async (req, res) => {
+  const { schoolCode, classes, sections, exam, examLevel } = req.body;
+
+  if (!examLevel || !schoolCode || !exam) {
+    return res.status(400).json({ message: 'Exam level, school code, and exam are required' });
+  }
 
   try {
-    const students = await STUDENT_LATEST.find({
-      schoolCode,
-      class: cls,
-      section,
-    });
+    const school = await School.findOne({ schoolCode }) || {};
 
-    // Filter students who participated in the selected exam (value === "1")
-    // const filtered = students.filter(student => student[exam] === "1");
+    const query = {};
+
+    query.schoolCode = schoolCode;
+
+    if (classes && classes.length > 0) {
+      query.class = { $in: classes };
+    }
+
+    if (sections && sections.length > 0) {
+      query.section = { $in: sections };
+    }
+
+    // Add exam to query
+    // query[exam] = "1";
+
+    const students = await STUDENT_LATEST.find(query);
     return res.status(200).json({ student: students, school });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
-
 });
 // Tushar
 
@@ -269,29 +368,38 @@ app.put("/student", async (req, res) => {
   }
 });
 
+
+
 // API to fetch admit-card
-app.post("/fetch-admit-card", async (req, res) => {
+app.post('/fetch-admit-card', async (req, res) => {
   try {
-    const { mobNo, level, session } = req.body;
+    const { mobNo, level } = req.body;
 
-    let studentData = studentCache[mobNo] || (await fetchDataByMobile(mobNo));
-    if (!studentData || !studentData["Mob No"]) {
-      return res
-        .status(404)
-        .json({ error: "No student found with this mobile number" });
-    }
-    studentCache[mobNo] = studentData;
+    const Level = level === 'basic' ? "L1" : "L2"
 
-    const studentName = studentData["Student's Name"];
-    if (!studentName) {
+    // Validate inputs
+    if (!mobNo || !level || !['L1', 'L2'].includes(Level)) {
       return res
         .status(400)
-        .json({ error: "Invalid student details in cache" });
+        .json({ error: 'Mobile number and valid level (basic/L1 or L2) are required' });
     }
-    await fetchAdmitCardFromDB(studentName, res, level, session);
+
+    let studentData = await STUDENT_LATEST.findOne({ mobNo }).lean();
+
+    // Convert studentId to ObjectId
+    let objectId;
+    try {
+      objectId = new ObjectId(studentData._id);
+    } catch (error) {
+      return res.status(400).json({ error: 'Invalid student ID format' });
+    }
+
+    await fetchAdmitCardFromDB(objectId, studentData.studentName, Level, res);
   } catch (error) {
-    console.error("Error processing request:", error);
-    res.status(500).json({ error: "Failed to process request" });
+    console.error('Error processing request:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to process request' });
+    }
   }
 });
 
@@ -315,40 +423,165 @@ app.get("/fetch-ceritficate/:mobNo", async (req, res) => {
 });
 
 // API to generate & upload admit card
+// app.post("/admit-card", async (req, res) => {
+//   const { mobNo, level, session } = req.body;
+
+//   if (!mobNo) {
+//     return res.status(400).json({ error: "Mobile number is required" });
+//   }
+
+//   let studentData = studentCache[mobNo] || (await fetchDataByMobile(mobNo));
+//   if (!studentData || !studentData["Mob No"]) {
+//     return res
+//       .status(404)
+//       .json({ error: "No student found with this mobile number" });
+//   }
+//   studentCache[mobNo] = studentData;
+
+//   try {
+//     const result = await generateAdmitCard(studentData, level, session);
+//     if (!result.success) {
+//       return res.status(500).json({ error: result.error });
+//     }
+
+//     await dbConnection();
+//     await uploadAdmitCard(studentData, res, level, session);
+
+//     if (!res.headersSent) {
+//       return res.status(200).json({
+//         message: "Admit card generated and stored successfully",
+//         path: result.path,
+//       });
+//     }
+//   } catch (error) {
+//     if (!res.headersSent) {
+//       return res.status(500).json({ error: "Internal server error" });
+//     }
+//   }
+// });
+
+async function fetchStudentsByFilters({ schoolCode, level }) {
+  try {
+    // Validate inputs
+    if (!schoolCode || !level) {
+      throw new Error("schoolCode and level are required");
+    }
+
+    // Build the query
+    const query = {
+      schoolCode: Number(schoolCode),
+    };
+
+    // Filter by level (L1 or L2 exams)
+    if (level === "L1") {
+      query.$or = [
+        { IAOL1: "1" },
+        { ITSTL1: "1" },
+        { IMOL1: "1" },
+        { IGKOL1: "1" },
+        { IENGOL1: "1" },
+      ];
+    } else if (level === "L2") {
+      query.$or = [
+        { IAOL2: "1" },
+        { ITSTL2: "1" },
+        { IMOL2: "1" },
+        { IENGOL2: "1" },
+      ];
+    } else {
+      throw new Error("Invalid level: must be L1 or L2");
+    }
+
+    // Execute the query
+    const students = await STUDENT_LATEST.find(query)
+      .select("rollNo studentName schoolCode class section fatherName motherName dob mobNo")
+      .lean();
+
+    if (!students || students.length === 0) {
+      return [];
+    }
+
+    return students;
+  } catch (error) {
+    console.error("Error fetching students by filters:", error);
+    throw error; // Let the caller handle the error
+  }
+}
+
 app.post("/admit-card", async (req, res) => {
-  const { mobNo, level, session } = req.body;
+  const { schoolCode, level /*, session */ } = req.body;
 
-  if (!mobNo) {
-    return res.status(400).json({ error: "Mobile number is required" });
+  if (!schoolCode || !level) {
+    return res.status(400).json({ error: "School code and level are required" });
   }
-
-  let studentData = studentCache[mobNo] || (await fetchDataByMobile(mobNo));
-  if (!studentData || !studentData["Mob No"]) {
-    return res
-      .status(404)
-      .json({ error: "No student found with this mobile number" });
-  }
-  studentCache[mobNo] = studentData;
 
   try {
-    const result = await generateAdmitCard(studentData, level, session);
-    if (!result.success) {
-      return res.status(500).json({ error: result.error });
+    const dbResponse = await dbConnection();
+    if (dbResponse.status !== "success") {
+      return res.status(500).json({ error: "Database connection failed" });
+    }
+    const db = dbResponse.conn.db;
+
+    // Fetch students
+    const students = await fetchStudentsByFilters({ schoolCode, level });
+
+    if (!students || students.length === 0) {
+      return res.status(404).json({ error: "No students found for the provided filters" });
     }
 
-    await dbConnection();
-    await uploadAdmitCard(studentData, res, level, session);
+    // Deduplicate students by mobNo
+    const uniqueStudents = [];
+    const seenMobNos = new Set();
+    for (const student of students) {
+      if (!seenMobNos.has(student.mobNo)) {
+        uniqueStudents.push(student);
+        seenMobNos.add(student.mobNo);
+      } else {
+        console.warn(`Duplicate student found: mobNo ${student.mobNo}`);
+      }
+    }
 
-    if (!res.headersSent) {
-      return res.status(200).json({
-        message: "Admit card generated and stored successfully",
-        path: result.path,
+    // Use student cache
+    const cachedStudents = uniqueStudents.map((student) => {
+      if (studentCache[student.mobNo]) {
+        console.log(`Cache hit for mobNo: ${student.mobNo}`);
+      }
+      const studentData = studentCache[student.mobNo] || student;
+      studentCache[student.mobNo] = studentData;
+      return studentData;
+    });
+
+    // Generate admit cards
+    const generateResults = await generateAdmitCard(cachedStudents, level /*, session */);
+
+    // Upload admit cards
+    const uploadResults = await uploadAdmitCard(cachedStudents, level, db);
+
+    // Combine results
+    const results = generateResults.map((gen, index) => ({
+      mobNo: gen.mobNo,
+      success: gen.success && uploadResults[index].success,
+      path: gen.path,
+      fileId: uploadResults[index].fileId,
+      error: gen.error || uploadResults[index].error,
+      message: uploadResults[index].message,
+    }));
+
+    const failed = results.filter((r) => r.error);
+    if (failed.length > 0) {
+      return res.status(207).json({
+        message: "Some admit cards failed to generate or upload",
+        results,
       });
     }
+
+    return res.status(200).json({
+      message: "All admit cards generated and stored successfully",
+      results,
+    });
   } catch (error) {
-    if (!res.headersSent) {
-      return res.status(500).json({ error: "Internal server error" });
-    }
+    console.error("Error generating admit cards:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -473,6 +706,8 @@ app.get("/all-schools", async (req, res) => {
     const schools = await School.find()
       .skip((page - 1) * limit)
       .limit(limit);
+
+
     const totalPages = Math.ceil((await School.countDocuments()) / limit);
 
     return res.status(200).json({ schools, totalPages, success: true });
