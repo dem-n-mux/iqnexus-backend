@@ -452,7 +452,7 @@ async function generateAdmitCard(students, level /*, session */) {
         const logoSrc = `data:image/png;base64,${logoBase64}`;
 
         const suffix = level === "L1" ? "Basic Level" : "Advance Level";
-        const subjectLevel = level === "L1" ? "L1" : "L2";
+        const subjectLevel = level === "L1" ? "Basic" : "Advance";
 
         const results = [];
         for (const student of students) {
