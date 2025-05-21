@@ -509,11 +509,14 @@ async function fetchStudentsByFilters({ schoolCode, level }) {
 }
 
 app.post("/admit-card", async (req, res) => {
-  const { schoolCode, level /*, session */ } = req.body;
+  const { schoolCode, level, /* session, */ examDate } = req.body;
 
-  if (!schoolCode || !level) {
-    return res.status(400).json({ error: "School code and level are required" });
+  // Validate required fields
+  if (!schoolCode || !level || !examDate) {
+    return res.status(400).json({ error: "School code, level, and exam date are required" });
   }
+
+  const school = await School.findOne({ schoolCode });
 
   try {
     const dbResponse = await dbConnection();
@@ -551,11 +554,11 @@ app.post("/admit-card", async (req, res) => {
       return studentData;
     });
 
-    // Generate admit cards
-    const generateResults = await generateAdmitCard(cachedStudents, level /*, session */);
+    // Generate admit cards with examDate
+    const generateResults = await generateAdmitCard(cachedStudents, level, /* session, */ examDate, school.schoolName);
 
     // Upload admit cards
-    const uploadResults = await uploadAdmitCard(cachedStudents, level, db);
+    const uploadResults = await uploadAdmitCard(cachedStudents, level, db, examDate);
 
     // Combine results
     const results = generateResults.map((gen, index) => ({
