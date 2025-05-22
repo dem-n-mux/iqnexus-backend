@@ -74,12 +74,13 @@ async function generateAdmitCard(students, level, /* session, */ examDate, schoo
     const results = [];
     for (const student of students) {
       const outputPath = `./outputs/admitCard_${student.studentName}-${level}-${student._id}.png`;
+      console.log(student);
 
-      const IAOL = student[`IAOL${subjectLevel}`] === "1";
-      const ITSTL = student[`ITSTL${subjectLevel}`] === "1";
-      const IMOL = student[`IMOL${subjectLevel}`] === "1";
-      const IGKOL = student[`IGKOL${subjectLevel}`] === "1";
-      const IENGOL = student[`IENGOL${subjectLevel}`] === "1";
+      const IQRO = student[`IAOL${subjectLevel}`] === "1";
+      const IQSO = student[`ITSTL${subjectLevel}`] === "1";
+      const IQMO = student[`IMOL${subjectLevel}`] === "1";
+      const IQGKO = student[`IGKOL${subjectLevel}`] === "1";
+      const IQEO = student[`IENGOL${subjectLevel}`] === "1";
 
       await nodeHtmlToImage({
         output: outputPath,
@@ -103,11 +104,13 @@ async function generateAdmitCard(students, level, /* session, */ examDate, schoo
           examDate: examDate || "N/A",
           qrUrl:
             "https://api.qrserver.com/v1/create-qr-code/?data=https://wa.me/919999999999&size=100x100",
-          IAOL,
-          ITSTL,
-          IMOL,
-          IGKOL,
-          IENGOL,
+          IQRO,
+          IQSO,
+          IQMO,
+          IQGKO,
+          IQEO,
+          classTeacher: student.incharge,
+          principal: student.principal,
         },
         puppeteerArgs: {
           args: ["--no-sandbox", "--disable-setuid-sandbox"],

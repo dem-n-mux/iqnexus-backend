@@ -174,7 +174,7 @@ async function getAdmitCardStudentsByFilters(schoolCode, examLevel, page, limit)
   const students = await STUDENT_LATEST.find(query)
     .skip(skip)
     .limit(limit)
-    .select("rollNo schoolCode class section studentName IAOL1 ITSTL1 IMOL1 IGKOL1 IENGOL1 IAOL2 ITSTL2 IMOL2 IENGOL2");
+    .select("rollNo schoolCode class  section dob mobNo studentName IAOL1 ITSTL1 IMOL1 IGKOL1 IENGOL1 IAOL2 ITSTL2 IMOL2 IENGOL2");
 
   const totalPages = Math.ceil(totalStudents / limit);
 
@@ -235,31 +235,57 @@ app.post("/admit-card-students", async (req, res) => {
 });
 
 // Tushar
-app.post("/allStudents", async (req, res) => {
-  const { schoolCode, classes, sections, exam, examLevel } = req.body;
+const examNameMapping = {
+  IQMO: 'IMO',
+  IQSO: 'ITST',
+  IQEO: 'IENGO',
+  IQRO: 'IAO',
+  IQGKO: 'IGKO'
+};
 
-  if (!examLevel || !schoolCode || !exam) {
-    return res.status(400).json({ message: 'Exam level, school code, and exam are required' });
+app.post("/allStudents", async (req, res) => {
+  const { schoolCode, classes, sections, exam } = req.body;
+
+  // Validate required fields
+  if (!schoolCode || !exam) {
+    return res.status(400).json({ message: 'School code and exam are required' });
   }
 
+  // Parse exam name and level
+  const levelMatch = exam.match(/(L1|L2)$/);
+  const examName = exam.replace(/(L1|L2)$/, '');
+
+  if (!levelMatch || !examNameMapping[examName]) {
+    return res.status(400).json({ message: 'Invalid exam format or exam name. Expected format: IQEOL1, IQMOL2, etc.' });
+  }
+
+  const examLevel = levelMatch[0]; // L1 or L2
+
   try {
+    // Find school
     const school = await School.findOne({ schoolCode }) || {};
 
-    const query = {};
+    // Build query
+    const query = { schoolCode };
 
-    query.schoolCode = schoolCode;
-
+    // Add class filter if provided
     if (classes && classes.length > 0) {
       query.class = { $in: classes };
     }
 
+    // Add section filter if provided
     if (sections && sections.length > 0) {
       query.section = { $in: sections };
     }
 
-    // Add exam to query
-    // query[exam] = "1";
+    // Map new exam name to old exam name and append level
+    const oldExamName = examNameMapping[examName];
+    const examField = `${oldExamName}${examLevel}`;
 
+    // Add exam filter (value must be "1")
+    query[examField] = "1";
+
+    // Fetch students
     const students = await STUDENT_LATEST.find(query);
     return res.status(200).json({ student: students, school });
   } catch (err) {
@@ -732,6 +758,16 @@ app.get("/get-school/:id", async (req, res) => {
     res.status(500).json({ message: "Error fetching schools", error });
   }
 });
+
+app.get("/all-school-admit-card", async (req, res) => {
+  try {
+    const schools = await School.find({})
+    return res.status(200).json({ schools, success: true });
+  } catch (error) {
+    console.error("❌ Error fetching schools:", error);
+    res.status(500).json({ message: "Error fetching schools", error });
+  }
+})
 
 
 app.put("/school", async (req, res) => {

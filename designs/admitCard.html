@@ -214,43 +214,50 @@
       <div class="exam-table-title">Exams to write:</div>
 
       <div class="exam-grid">
-        <div>IQROL</div>
+        <div>IQRO</div>
         <div>
-          <input type="checkbox" {{#if IAOL}}checked{{/if}} disabled />
+          <input type="checkbox" {{#if IQRO}}checked{{/if}} disabled />
         </div>
-        <div>{{#if IAOL}}Participating{{else}}Not participated{{/if}}</div>
+        <div>{{#if IQRO}}Participating{{else}}Not participated{{/if}}</div>
 
-        <div>IQSOL</div>
+        <div>IQSO</div>
         <div>
-          <input type="checkbox" {{#if ITSTL}}checked{{/if}} disabled />
+          <input type="checkbox" {{#if IQSO}}checked{{/if}} disabled />
         </div>
-        <div>{{#if ITSTL}}Participating{{else}}Not participated{{/if}}</div>
+        <div>{{#if IQSO}}Participating{{else}}Not participated{{/if}}</div>
 
-        <div>IQMOL</div>
+        <div>IQMO</div>
         <div>
-          <input type="checkbox" {{#if IMOL}}checked{{/if}} disabled />
+          <input type="checkbox" {{#if IQMO}}checked{{/if}} disabled />
         </div>
-        <div>{{#if IMOL}}Participating{{else}}Not participated{{/if}}</div>
+        <div>{{#if IQMO}}Participating{{else}}Not participated{{/if}}</div>
 
-        <div>IQGKOL</div>
+        <div>IQGKO</div>
         <div>
-          <input type="checkbox" {{#if IGKOL}}checked{{/if}} disabled />
+          <input type="checkbox" {{#if IQGKO}}checked{{/if}} disabled />
         </div>
-        <div>{{#if IGKOL}}Participating{{else}}Not participated{{/if}}</div>
+        <div>{{#if IQGKO}}Participating{{else}}Not participated{{/if}}</div>
 
-        <div>IQEOL</div>
+        <div>IQEO</div>
         <div>
-          <input type="checkbox" {{#if IENGOL}}checked{{/if}} disabled />
+          <input type="checkbox" {{#if IQEO}}checked{{/if}} disabled />
         </div>
-        <div>{{#if IENGOL}}Participating{{else}}Not participated{{/if}}</div>
+        <div>{{#if IQEO}}Participating{{else}}Not participated{{/if}}</div>
       </div>
     </div>
 
-    <!-- Exam Center -->
+    <!-- Exam Center/Date -->
     <div class="exam-center">
       <div class="label">Exam center:</div>
-      <div>YOUR OWN SCHOOL</div>
+      <div>{{examCenter}}</div>
+      <div class="label">Exam Date :</div>
+      <div>{{examDate}}</div>
     </div>
+
+    <!-- <div class="exam-date">
+      <div class="label">Exam Date :</div>
+      <div>{{examDate}}</div>
+    </div> -->
 
     <!-- General Instructions -->
     <div class="instructions">
