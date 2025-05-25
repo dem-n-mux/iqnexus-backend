@@ -394,8 +394,6 @@ app.put("/student", async (req, res) => {
   }
 });
 
-
-
 // API to fetch admit-card
 app.post('/fetch-admit-card', async (req, res) => {
   try {
@@ -512,21 +510,21 @@ async function fetchStudentsByFilters({ schoolCode, level }) {
         { IAOL2: "1" },
         { ITSTL2: "1" },
         { IMOL2: "1" },
+        { IGKOL2: "1" },
         { IENGOL2: "1" },
       ];
     } else {
       throw new Error("Invalid level: must be L1 or L2");
     }
 
-    // Execute the query
+    // Execute the query 
     const students = await STUDENT_LATEST.find(query)
-      .select("rollNo studentName schoolCode class section fatherName motherName dob mobNo")
+      .select("rollNo studentName schoolCode class section fatherName motherName dob mobNo IAOL1 ITSTL1 IMOL1 IGKOL1 IENGOL1 IAOL2 ITSTL2 IMOL2 IGKOL2 IENGOL2")
       .lean();
 
     if (!students || students.length === 0) {
       return [];
     }
-
     return students;
   } catch (error) {
     console.error("Error fetching students by filters:", error);
@@ -581,7 +579,7 @@ app.post("/admit-card", async (req, res) => {
     });
 
     // Generate admit cards with examDate
-    const generateResults = await generateAdmitCard(cachedStudents, level, /* session, */ examDate, school.schoolName);
+    const generateResults = await generateAdmitCard(cachedStudents, level, /* session, */ examDate, school);
 
     // Upload admit cards
     const uploadResults = await uploadAdmitCard(cachedStudents, level, db, examDate);
@@ -611,6 +609,32 @@ app.post("/admit-card", async (req, res) => {
   } catch (error) {
     console.error("Error generating admit cards:", error);
     return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/student-admit-card/:phone", async (req, res) => {
+  const { phone } = req.params;
+  const dbResponse = await dbConnection();
+
+  if (dbResponse.status !== "success") {
+    return res.status(500).json({ error: "Database connection failed" });
+  }
+
+  const db = dbResponse.conn.db;
+
+  try {
+    const admitcard = await db
+      .collection("admitCards.files")
+      .findOne({ "metadata.mobNo": phone });
+
+    if (!admitcard) {
+      return res.status(404).json({ error: "Admit card not found" });
+    }
+
+    return res.status(200).json({ result: admitcard });
+  } catch (error) {
+    console.error("Error fetching admit card:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -864,6 +888,32 @@ app.get("/all-students", async (req, res) => {
       .json({ allStudents, totalPages, totalStudents, success: true });
   } catch (error) {
     console.error("❌ Error fetching all students:", error);
+    res.status(500).json({ message: "Error fetching all students", error });
+  }
+});
+
+app.post("/all-students-no-pagination", async (req, res) => {
+  try {
+    const { schoolCode, className, rollNo, section, studentName, subject } = req.body;
+    let query = {};
+
+    if (schoolCode) query.schoolCode = Number(schoolCode);
+    if (className && className.length > 0) query.class = { $in: className };
+    if (rollNo) query.rollNo = rollNo;
+    if (section && section.length > 0) query.section = { $in: section };
+    if (studentName) query.studentName = { $regex: studentName, $options: "i" };
+    if (subject) query[subject] = "1";
+
+    const data = await STUDENT_LATEST.find(query);
+    const totalStudents = data.length;
+
+    return res.status(200).json({
+      success: true,
+      data,
+      totalStudents,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching all students without pagination:", error);
     res.status(500).json({ message: "Error fetching all students", error });
   }
 });
