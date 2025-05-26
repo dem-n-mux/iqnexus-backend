@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import cors from "cors";
 import fs from "fs/promises";
+
 import dotenv from "dotenv";
 import { fetchDataByMobile } from "./service.js";
 import {
@@ -23,6 +24,7 @@ import { convertXlsxToMongoDbForSchool } from "./excelToMongoForSchool.js";
 import { Admin } from "./admin.js";
 import { Int32 } from "mongodb";
 import { MongoClient, GridFSBucket, ObjectId } from "mongodb";
+import { KINDERGARTEN_STUDENT } from "./kindergarten.model.js"
 
 dotenv.config();
 
@@ -292,6 +294,266 @@ app.post("/allStudents", async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+
+app.post('/kindergarten-students', async (req, res) => {
+  const { schoolCode, rollNo, section, studentName, IQKG } = req.body;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  // Validate inputs
+  if (schoolCode && isNaN(schoolCode)) {
+    return res.status(400).json({ message: 'School code must be a number' });
+  }
+  if (section && !Array.isArray(section)) {
+    return res.status(400).json({ message: 'Section must be an array' });
+  }
+  if (section && section.some(s => !['LKG', 'UKG', 'PG'].includes(s))) {
+    return res.status(400).json({ message: 'Sections must be LKG, UKG, or PG' });
+  }
+  if (IQKG && !['0', '1'].includes(IQKG)) {
+    return res.status(400).json({ message: 'IQKG must be 0 or 1' });
+  }
+
+  try {
+    // Build query
+    const query = { class: 'KG' }; // Enforce class as KG
+
+    if (schoolCode) query.schoolCode = Number(schoolCode);
+    if (rollNo) query.rollNo = { $regex: rollNo.trim(), $options: 'i' };
+    if (section && section.length > 0) query.section = { $in: section };
+    if (studentName) query.studentName = { $regex: studentName.trim(), $options: 'i' };
+    if (IQKG) query.IQKG = IQKG;
+
+    // Fetch students with pagination
+    const students = await KINDERGARTEN_STUDENT.find(query)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    // Get total count for pagination
+    const totalStudents = await KINDERGARTEN_STUDENT.countDocuments(query);
+    const totalPages = Math.ceil(totalStudents / limit);
+
+    return res.status(200).json({
+      success: true,
+      data: students,
+      totalPages,
+      totalStudents,
+    });
+  } catch (err) {
+    console.error('Error fetching kindergarten students:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// GET /all-kindergarten-students - Fetch all kindergarten students with pagination
+app.get('/all-kindergarten-students', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  try {
+    // Fetch all students with class KG
+    const students = await KINDERGARTEN_STUDENT.find({ class: 'KG' })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    // Get total count for pagination
+    const totalStudents = await KINDERGARTEN_STUDENT.countDocuments({ class: 'KG' });
+    const totalPages = Math.ceil(totalStudents / limit);
+
+    return res.status(200).json({
+      success: true,
+      allStudents: students,
+      totalPages,
+      totalStudents,
+    });
+  } catch (err) {
+    console.error('Error fetching all kindergarten students:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+app.post('/all-kindergarten-students-no-pagination', async (req, res) => {
+  const { schoolCode, rollNo, section, studentName, IQKG } = req.body;
+
+  // Validate inputs
+  if (schoolCode && isNaN(schoolCode)) {
+    return res.status(400).json({ message: 'School code must be a number' });
+  }
+  if (section && !Array.isArray(section)) {
+    return res.status(400).json({ message: 'Section must be an array' });
+  }
+  if (section && section.some(s => !['LKG', 'UKG', 'PG'].includes(s))) {
+    return res.status(400).json({ message: 'Sections must be LKG, UKG, or PG' });
+  }
+  if (IQKG && !['0', '1'].includes(IQKG)) {
+    return res.status(400).json({ message: 'IQKG must be 0 or 1' });
+  }
+
+  try {
+    // Build query
+    const query = { class: 'KG' }; // Enforce class as KG
+
+    if (schoolCode) query.schoolCode = Number(schoolCode);
+    if (rollNo) query.rollNo = { $regex: rollNo.trim(), $options: 'i' };
+    if (section && section.length > 0) query.section = { $in: section };
+    if (studentName) query.studentName = { $regex: studentName.trim(), $options: 'i' };
+    if (IQKG) query.IQKG = IQKG;
+
+    // Fetch all matching students
+    const students = await KINDERGARTEN_STUDENT.find(query).lean();
+
+    return res.status(200).json({
+      success: true,
+      data: students,
+    });
+  } catch (err) {
+    console.error('Error fetching all kindergarten students:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+app.delete('/kindergarten-student', async (req, res) => {
+  const { rollNo, class: className } = req.body;
+
+  // Validate required fields
+  if (!rollNo) {
+    return res.status(400).json({ message: 'Roll number is required' });
+  }
+  if (!className || className !== 'KG') {
+    return res.status(400).json({ message: 'Class must be KG' });
+  }
+
+  try {
+    // Find and delete student
+    const deletedStudent = await KINDERGARTEN_STUDENT.findOneAndDelete({
+      rollNo: rollNo.trim(),
+      class: 'KG',
+    });
+
+    if (!deletedStudent) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Student deleted successfully',
+    });
+  } catch (err) {
+    console.error('Error deleting kindergarten student:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// PUT /kindergarten-student - Update a kindergarten student
+app.put('/kindergarten-student', async (req, res) => {
+  const {
+    _id,
+    rollNo,
+    schoolCode,
+    section,
+    studentName,
+    motherName,
+    fatherName,
+    dob,
+    mobNo,
+    city,
+    IQKG,
+    Duplicates,
+  } = req.body;
+
+  // Validate required fields
+  if (!_id) {
+    return res.status(400).json({ message: '_id is required' });
+  }
+  if (!rollNo) {
+    return res.status(400).json({ message: 'Roll number is required' });
+  }
+  if (!schoolCode) {
+    return res.status(400).json({ message: 'School code is required' });
+  }
+  if (!section) {
+    return res.status(400).json({ message: 'Section is required' });
+  }
+  if (!studentName) {
+    return res.status(400).json({ message: 'Student name is required' });
+  }
+
+  // Validate section
+  const validSections = ['LKG', 'UKG', 'PG'];
+  if (!validSections.includes(section)) {
+    return res.status(400).json({ message: 'Section must be LKG, UKG, or PG' });
+  }
+
+  // Validate IQKG
+  const validIQKG = ['0', '1'];
+  if (IQKG && !validIQKG.includes(IQKG)) {
+    return res.status(400).json({ message: 'IQKG must be 0 or 1' });
+  }
+
+  // Validate Duplicates
+  if (Duplicates !== undefined && typeof Duplicates !== 'boolean') {
+    return res.status(400).json({ message: 'Duplicates must be a boolean' });
+  }
+
+  // Validate schoolCode
+  if (isNaN(schoolCode)) {
+    return res.status(400).json({ message: 'School code must be a number' });
+  }
+
+  // Validate class (fixed as "KG")
+  const classValue = 'KG';
+
+  try {
+    // Check for rollNo uniqueness (exclude current student)
+    const existingStudent = await KINDERGARTEN_STUDENT.findOne({
+      rollNo: rollNo.trim(),
+      _id: { $ne: _id },
+    });
+    if (existingStudent) {
+      return res.status(400).json({ message: 'Roll number already exists' });
+    }
+
+    // Prepare update data
+    const updateData = {
+      rollNo: rollNo.trim(),
+      schoolCode: Number(schoolCode),
+      class: classValue,
+      section: section.trim(),
+      studentName: studentName.trim(),
+      motherName: motherName ? motherName.trim() : '',
+      fatherName: fatherName ? fatherName.trim() : '',
+      dob: dob ? dob.trim() : '',
+      mobNo: mobNo ? mobNo.trim() : '',
+      city: city ? city.trim() : '',
+      IQKG: IQKG || '0',
+      Duplicates: Duplicates !== undefined ? Duplicates : false,
+    };
+
+    // Update student
+    const updatedStudent = await KINDERGARTEN_STUDENT.findByIdAndUpdate(
+      _id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Student updated successfully',
+      data: updatedStudent,
+    });
+  } catch (err) {
+    console.error('Error updating kindergarten student:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // Tushar
 
 // API to update single student
@@ -595,9 +857,19 @@ app.post("/admit-card", async (req, res) => {
     }));
 
     const failed = results.filter((r) => r.error);
+    const alreadyGenerated = results.filter((r) => r.message === "Admit card already generated");
+
+    // const failed = results.filter((r) => r.error);
     if (failed.length > 0) {
       return res.status(207).json({
         message: "Some admit cards failed to generate or upload",
+        results,
+      });
+    }
+
+    if (alreadyGenerated.length === results.length) {
+      return res.status(200).json({
+        message: "All admit cards were already generated",
         results,
       });
     }
@@ -736,10 +1008,170 @@ app.post("/upload-studentData", upload.single("file"), async (req, res) => {
   }
 });
 
+// API to upload kindergarten student data in bulk
+app.post('/upload-kindergarten-students', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'Please upload a CSV file' });
+  }
+
+  try {
+    // Expected CSV columns
+    const requiredColumns = ['studentName', 'rollNo', 'schoolCode', 'section'];
+    const optionalColumns = ['motherName', 'fatherName', 'dob', 'mobNo', 'city', 'IQKG', 'Duplicates', 'class'];
+    const allColumns = [...requiredColumns, ...optionalColumns];
+
+    const students = [];
+    let headers = [];
+
+    // Parse CSV file
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(req.file.path)
+        .pipe(parse({ columns: true, trim: true, skip_empty_lines: true }))
+        .on('headers', (headerList) => {
+          headers = headerList.map(h => h.trim());
+          // Validate required headers
+          const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+          if (missingColumns.length > 0) {
+            reject(new Error(`Missing required columns: ${missingColumns.join(', ')}`));
+          }
+          // Warn about unexpected columns
+          const unexpectedColumns = headers.filter(col => !allColumns.includes(col));
+          if (unexpectedColumns.length > 0) {
+            console.warn(`Unexpected columns ignored: ${unexpectedColumns.join(', ')}`);
+          }
+        })
+        .on('data', (row) => {
+          students.push(row);
+        })
+        .on('end', resolve)
+        .on('error', reject);
+    });
+
+    // Validate and transform student data
+    const validSections = ['LKG', 'UKG', 'PG'];
+    const validIQKG = ['0', '1'];
+    const errors = [];
+    const processedStudents = [];
+
+    for (let i = 0; i < students.length; i++) {
+      const student = students[i];
+      const rowNum = i + 2; // Account for header row
+
+      // Validate required fields
+      if (!student.studentName) errors.push(`Row ${rowNum}: studentName is required`);
+      if (!student.rollNo) errors.push(`Row ${rowNum}: rollNo is required`);
+      if (!student.schoolCode || isNaN(student.schoolCode)) {
+        errors.push(`Row ${rowNum}: schoolCode must be a number`);
+      }
+      if (!student.section || !validSections.includes(student.section)) {
+        errors.push(`Row ${rowNum}: section must be LKG, UKG, or PG`);
+      }
+
+      // Validate class if provided
+      if (student.class && student.class !== 'KG') {
+        errors.push(`Row ${rowNum}: class must be KG`);
+      }
+
+      // Validate optional fields
+      if (student.IQKG && !validIQKG.includes(student.IQKG)) {
+        errors.push(`Row ${rowNum}: IQKG must be 0 or 1`);
+      }
+      if (student.Duplicates && !['true', 'false', '0', '1'].includes(student.Duplicates.toLowerCase())) {
+        errors.push(`Row ${rowNum}: Duplicates must be true or false`);
+      }
+
+      // Transform data
+      processedStudents.push({
+        rollNo: student.rollNo?.trim(),
+        schoolCode: Number(student.schoolCode),
+        class: 'KG', // Fixed for kindergarten
+        section: student.section?.trim(),
+        studentName: student.studentName?.trim(),
+        motherName: student.motherName?.trim() || '',
+        fatherName: student.fatherName?.trim() || '',
+        dob: student.dob?.trim() || '',
+        mobNo: student.mobNo?.trim() || '',
+        city: student.city?.trim() || '',
+        IQKG: student.IQKG || '0',
+        Duplicates: student.Duplicates ? student.Duplicates.toLowerCase() === 'true' || student.Duplicates === '1' : false,
+      });
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ message: 'Invalid CSV data', errors });
+    }
+
+    // Check for duplicate rollNos in CSV
+    const rollNos = processedStudents.map(s => s.rollNo);
+    const duplicateRollNos = rollNos.filter((rollNo, index) => rollNos.indexOf(rollNo) !== index);
+    if (duplicateRollNos.length > 0) {
+      return res.status(400).json({
+        message: 'Duplicate roll numbers found in CSV',
+        duplicates: [...new Set(duplicateRollNos)],
+      });
+    }
+
+    // Check for existing rollNos in database
+    const existingStudents = await KINDERGARTEN_STUDENT.find({
+      rollNo: { $in: rollNos },
+    }).select('rollNo');
+    const existingRollNos = existingStudents.map(s => s.rollNo);
+    if (existingRollNos.length > 0) {
+      return res.status(400).json({
+        message: 'Some roll numbers already exist in the database',
+        existing: existingRollNos,
+      });
+    }
+
+    // Insert students into database
+    const insertedStudents = await KINDERGARTEN_STUDENT.insertMany(processedStudents, {
+      ordered: false, // Continue on errors
+    });
+
+    // Clean up uploaded file
+    await fsPromises.unlink(req.file.path);
+
+    return res.status(200).json({
+      success: true,
+      message: `Successfully uploaded ${insertedStudents.length} kindergarten students`,
+      count: insertedStudents.length,
+    });
+  } catch (error) {
+    // Clean up file on error
+    try {
+      await fsPromises.unlink(req.file.path);
+    } catch (unlinkError) {
+      console.error('Error deleting file:', unlinkError);
+    }
+
+    console.error('Error processing CSV:', error);
+    res.status(400).json({
+      message: error.message || 'Failed to process CSV file',
+      errors: error.errors || [],
+    });
+  }
+});
+
 // API to add single student
 app.post("/add-student", async (req, res) => {
   try {
     const newStudent = new STUDENT_LATEST(req.body);
+    const savedStudent = await newStudent.save();
+
+    res.status(201).json({
+      message: "Student added successfully",
+      collection: savedStudent.constructor.collection.name,
+      documentId: savedStudent._id,
+    });
+  } catch (error) {
+    console.error("❌ Error adding student:", error);
+    res.status(500).json({ message: "Error adding student", error });
+  }
+});
+
+app.post("/add-kindergarten-student", async (req, res) => {
+  try {
+    const newStudent = new KINDERGARTEN_STUDENT(req.body);
     const savedStudent = await newStudent.save();
 
     res.status(201).json({

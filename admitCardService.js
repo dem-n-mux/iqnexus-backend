@@ -74,6 +74,28 @@ async function generateAdmitCard(students, level, /* session, */ examDate, schoo
     const results = [];
     for (const student of students) {
       const outputPath = `./outputs/admitCard_${student.studentName}-${level}-${student._id}.png`;
+      const filename = `admitCard_${student.studentName}-${level}-${student._id}.png`;
+
+      // Check if admit card already exists in GridFS
+      const dbResponse = await dbConnection();
+      if (dbResponse.status !== "success") {
+        throw new Error("Database connection failed");
+      }
+      const db = dbResponse.conn.db;
+      const existingFile = await db
+        .collection("admitCards.files")
+        .findOne({ filename });
+
+      if (existingFile) {
+        console.log(`Admit card already exists for ${student.studentName}: ${filename}`);
+        results.push({
+          success: true,
+          mobNo: student.mobNo,
+          fileId: existingFile._id,
+          message: "Admit card already generated",
+        });
+        continue;
+      }
 
       const levelSuffix = level === "L1" ? "1" : "2";
       const IAOL = student[`IAOL${levelSuffix}`] === "1";
@@ -81,10 +103,6 @@ async function generateAdmitCard(students, level, /* session, */ examDate, schoo
       const IMOL = student[`IMOL${levelSuffix}`] === "1";
       const IGKOL = student[`IGKOL${levelSuffix}`] === "1";
       const IENGOL = student[`IENGOL${levelSuffix}`] === "1";
-
-      console.log(student);
-
-      console.log(IAOL, ITSTL, IGKOL, IMOL, IENGOL)
 
       await nodeHtmlToImage({
         output: outputPath,
