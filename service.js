@@ -134,6 +134,7 @@
 //service.js
 import { STUDENT_LATEST } from "./newStudentModel.model.js";
 import { School } from "./school.js";
+import { KINDERGARTEN_STUDENT } from "./kindergarten.model.js";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 
@@ -223,6 +224,56 @@ export async function fetchDataByMobile(mobNo) {
     return { error: "Failed to fetch data", details: error.message };
   }
 }
+
+export async function fetchKgDataByMobile(mobNo) {
+  try {
+    // Convert mobNo to string and validate
+    const mobileNumber = String(mobNo).trim();
+    if (!mobileNumber) {
+      console.warn("⚠ Invalid mobile number: empty or invalid");
+      return { error: "Invalid mobile number: must be a non-empty string" };
+    }
+
+    // Query the student_data_latests collection using Mongoose
+    const data = await KINDERGARTEN_STUDENT.findOne({ mobNo: mobileNumber });
+
+    if (!data) {
+      console.warn("⚠ No student found for Mobile No:", mobileNumber);
+      return { error: "No student found with this mobile number" };
+    }
+
+    // Fetch school data using the schoolCode (assumed to be a Number)
+    const schoolData = await fetchSchoolData(data.schoolCode);
+
+    // Prepare the response data
+    const extractedData = {
+      "Roll No": data.rollNo || "Unknown",
+      Duplicates: data.Duplicates !== undefined ? data.Duplicates : false,
+      "School Code": data.schoolCode || "",
+      Class: data.class !== undefined ? data.class : "Unknown",
+      Section: data.section || "Unknown",
+      "Student's Name": data.studentName?.trim() || "Unknown",
+      "Mother's Name": data.motherName || "",
+      "Father's Name": data.fatherName || "",
+      DOB: data.dob || "",
+      "Mob No": data.mobNo || "",
+      "IQKG": data.IQKG !== undefined ? data.IQKG : "0",
+      // School data fields
+      "School City": schoolData?.city?.trim() || "Unknown",
+      Country: schoolData?.country?.trim() || "Unknown",
+      School: schoolData?.schoolName?.trim() || "Unknown",
+      Area: schoolData?.area?.trim() || "Unknown",
+      Incharge: schoolData?.incharge?.trim() || "Unkown",
+      Principal: schoolData?.principalName?.trim() || "Unkown",
+    };
+
+    return extractedData;
+  } catch (error) {
+    console.error("❌ Error fetching data from MongoDB:", error);
+    return { error: "Failed to fetch data", details: error.message };
+  }
+}
+
 
 async function fetchSchoolData(code) {
   try {

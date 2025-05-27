@@ -4,7 +4,7 @@ import cors from "cors";
 import fs from "fs/promises";
 
 import dotenv from "dotenv";
-import { fetchDataByMobile } from "./service.js";
+import { fetchDataByMobile, fetchKgDataByMobile } from "./service.js";
 import {
   generateAdmitCard,
   dbConnection,
@@ -73,13 +73,25 @@ app.get("/get-student", async (req, res) => {
   }
 
   try {
-    const studentData = await fetchDataByMobile(mobNo);
+     let studentData = await fetchDataByMobile(mobNo);
 
-    if (studentData["Mob No"]) {
+    if (studentData && studentData["Mob No"]) {
       studentCache[mobNo] = studentData;
-      return res
-        .status(200)
-        .json({ studentData, mobile: studentData["Mob No"] });
+      return res.status(200).json({
+        studentData,
+        mobile: studentData["Mob No"]
+      });
+    }
+
+    // Try KG fallback if not found in main DB
+    studentData = await fetchKgDataByMobile(mobNo);
+
+    if (studentData && studentData["Mob No"]) {
+      studentCache[mobNo] = studentData;
+      return res.status(200).json({
+        studentData,
+        mobile: studentData["Mob No"]
+      });
     }
 
     return res
