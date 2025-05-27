@@ -134,7 +134,6 @@
 //service.js
 import { STUDENT_LATEST } from "./newStudentModel.model.js";
 import { School } from "./school.js";
-import { KINDERGARTEN_STUDENT } from "./kindergarten.model.js";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 
@@ -224,6 +223,7 @@ export async function fetchDataByMobile(mobNo) {
     return { error: "Failed to fetch data", details: error.message };
   }
 }
+
 
 export async function fetchKgDataByMobile(mobNo) {
   try {

@@ -14,6 +14,7 @@ import {
 import { generateAndUploadDocument, fetchImage } from "./certificateService.js";
 import { fetchStudyMaterial, StudyMaterial } from "./studyMaterialService.js";
 import { excelToMongoDbForStudent } from "./excelToMongoForStudent.js";
+import { excelToMongoDbForKindergarten } from "./excelToMongoForKGStudents.js"
 import {
   STUDENT_LATEST,
   getStudentsByFilters,
@@ -720,44 +721,6 @@ app.get("/fetch-ceritficate/:mobNo", async (req, res) => {
   fetchImage("certificate", studentName, res);
 });
 
-// API to generate & upload admit card
-// app.post("/admit-card", async (req, res) => {
-//   const { mobNo, level, session } = req.body;
-
-//   if (!mobNo) {
-//     return res.status(400).json({ error: "Mobile number is required" });
-//   }
-
-//   let studentData = studentCache[mobNo] || (await fetchDataByMobile(mobNo));
-//   if (!studentData || !studentData["Mob No"]) {
-//     return res
-//       .status(404)
-//       .json({ error: "No student found with this mobile number" });
-//   }
-//   studentCache[mobNo] = studentData;
-
-//   try {
-//     const result = await generateAdmitCard(studentData, level, session);
-//     if (!result.success) {
-//       return res.status(500).json({ error: result.error });
-//     }
-
-//     await dbConnection();
-//     await uploadAdmitCard(studentData, res, level, session);
-
-//     if (!res.headersSent) {
-//       return res.status(200).json({
-//         message: "Admit card generated and stored successfully",
-//         path: result.path,
-//       });
-//     }
-//   } catch (error) {
-//     if (!res.headersSent) {
-//       return res.status(500).json({ error: "Internal server error" });
-//     }
-//   }
-// });
-
 async function fetchStudentsByFilters({ schoolCode, level }) {
   try {
     // Validate inputs
@@ -1027,136 +990,9 @@ app.post('/upload-kindergarten-students', upload.single('file'), async (req, res
   }
 
   try {
-    // Expected CSV columns
-    const requiredColumns = ['studentName', 'rollNo', 'schoolCode', 'section'];
-    const optionalColumns = ['motherName', 'fatherName', 'dob', 'mobNo', 'city', 'IQKG', 'Duplicates', 'class'];
-    const allColumns = [...requiredColumns, ...optionalColumns];
-
-    const students = [];
-    let headers = [];
-
-    // Parse CSV file
-    await new Promise((resolve, reject) => {
-      fs.createReadStream(req.file.path)
-        .pipe(parse({ columns: true, trim: true, skip_empty_lines: true }))
-        .on('headers', (headerList) => {
-          headers = headerList.map(h => h.trim());
-          // Validate required headers
-          const missingColumns = requiredColumns.filter(col => !headers.includes(col));
-          if (missingColumns.length > 0) {
-            reject(new Error(`Missing required columns: ${missingColumns.join(', ')}`));
-          }
-          // Warn about unexpected columns
-          const unexpectedColumns = headers.filter(col => !allColumns.includes(col));
-          if (unexpectedColumns.length > 0) {
-            console.warn(`Unexpected columns ignored: ${unexpectedColumns.join(', ')}`);
-          }
-        })
-        .on('data', (row) => {
-          students.push(row);
-        })
-        .on('end', resolve)
-        .on('error', reject);
-    });
-
-    // Validate and transform student data
-    const validSections = ['LKG', 'UKG', 'PG'];
-    const validIQKG = ['0', '1'];
-    const errors = [];
-    const processedStudents = [];
-
-    for (let i = 0; i < students.length; i++) {
-      const student = students[i];
-      const rowNum = i + 2; // Account for header row
-
-      // Validate required fields
-      if (!student.studentName) errors.push(`Row ${rowNum}: studentName is required`);
-      if (!student.rollNo) errors.push(`Row ${rowNum}: rollNo is required`);
-      if (!student.schoolCode || isNaN(student.schoolCode)) {
-        errors.push(`Row ${rowNum}: schoolCode must be a number`);
-      }
-      if (!student.section || !validSections.includes(student.section)) {
-        errors.push(`Row ${rowNum}: section must be LKG, UKG, or PG`);
-      }
-
-      // Validate class if provided
-      if (student.class && student.class !== 'KG') {
-        errors.push(`Row ${rowNum}: class must be KG`);
-      }
-
-      // Validate optional fields
-      if (student.IQKG && !validIQKG.includes(student.IQKG)) {
-        errors.push(`Row ${rowNum}: IQKG must be 0 or 1`);
-      }
-      if (student.Duplicates && !['true', 'false', '0', '1'].includes(student.Duplicates.toLowerCase())) {
-        errors.push(`Row ${rowNum}: Duplicates must be true or false`);
-      }
-
-      // Transform data
-      processedStudents.push({
-        rollNo: student.rollNo?.trim(),
-        schoolCode: Number(student.schoolCode),
-        class: 'KG', // Fixed for kindergarten
-        section: student.section?.trim(),
-        studentName: student.studentName?.trim(),
-        motherName: student.motherName?.trim() || '',
-        fatherName: student.fatherName?.trim() || '',
-        dob: student.dob?.trim() || '',
-        mobNo: student.mobNo?.trim() || '',
-        city: student.city?.trim() || '',
-        IQKG: student.IQKG || '0',
-        Duplicates: student.Duplicates ? student.Duplicates.toLowerCase() === 'true' || student.Duplicates === '1' : false,
-      });
-    }
-
-    if (errors.length > 0) {
-      return res.status(400).json({ message: 'Invalid CSV data', errors });
-    }
-
-    // Check for duplicate rollNos in CSV
-    const rollNos = processedStudents.map(s => s.rollNo);
-    const duplicateRollNos = rollNos.filter((rollNo, index) => rollNos.indexOf(rollNo) !== index);
-    if (duplicateRollNos.length > 0) {
-      return res.status(400).json({
-        message: 'Duplicate roll numbers found in CSV',
-        duplicates: [...new Set(duplicateRollNos)],
-      });
-    }
-
-    // Check for existing rollNos in database
-    const existingStudents = await KINDERGARTEN_STUDENT.find({
-      rollNo: { $in: rollNos },
-    }).select('rollNo');
-    const existingRollNos = existingStudents.map(s => s.rollNo);
-    if (existingRollNos.length > 0) {
-      return res.status(400).json({
-        message: 'Some roll numbers already exist in the database',
-        existing: existingRollNos,
-      });
-    }
-
-    // Insert students into database
-    const insertedStudents = await KINDERGARTEN_STUDENT.insertMany(processedStudents, {
-      ordered: false, // Continue on errors
-    });
-
-    // Clean up uploaded file
-    await fsPromises.unlink(req.file.path);
-
-    return res.status(200).json({
-      success: true,
-      message: `Successfully uploaded ${insertedStudents.length} kindergarten students`,
-      count: insertedStudents.length,
-    });
+    const response = await excelToMongoDbForKindergarten(req.file.path);
+    res.status(200).json(response);
   } catch (error) {
-    // Clean up file on error
-    try {
-      await fsPromises.unlink(req.file.path);
-    } catch (unlinkError) {
-      console.error('Error deleting file:', unlinkError);
-    }
-
-    console.error('Error processing CSV:', error);
     res.status(400).json({
       message: error.message || 'Failed to process CSV file',
       errors: error.errors || [],
