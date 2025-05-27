@@ -134,7 +134,7 @@
 //service.js
 import { STUDENT_LATEST } from "./newStudentModel.model.js";
 import { School } from "./school.js";
-import { KINDERGARTEN_STUDENT } from "./kindergartenStudent.model.js";
+import { KINDERGARTEN_STUDENT } from "./kindergarten.model.js";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 
