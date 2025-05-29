@@ -54,12 +54,81 @@ const KindergartenStudentSchema = new Schema(
             trim: true,
             default: "",
         },
-        IQKG: {
+        IQKG1: {
+            type: String,
+            trim: true,
+            default: "0",
+        },
+        IQKG2: {
             type: String,
             trim: true,
             default: "0",
         },
         city: {
+            type: String,
+            trim: true,
+            default: "",
+        }, advanceLevelAmountPaid: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        advanceLevelAmountPaidOnline: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        totalAmountPaid: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        totalAmountPaidOnline: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        totalBasicLevelParticipatedExams: {
+            type: String,
+            trim: true,
+            default: "0",
+        },
+        basicLevelFullAmount: {
+            type: String,
+            trim: true,
+            default: "0",
+        },
+        basicLevelAmountPaid: {
+            type: String,
+            trim: true,
+            default: "0",
+        },
+        basicLevelAmountPaidOnline: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        isBasicLevelConcessionGiven: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        concessionReason: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        remark: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        ParentsWorkingschool: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        designation: {
             type: String,
             trim: true,
             default: "",

@@ -19,6 +19,19 @@ export async function excelToMongoDbForKindergarten(filePath) {
             IQKG: "IQKG",
             Duplicates: "Duplicates",
             Class: "class",
+            "Total Basic Level Participated Exams": "totalBasicLevelParticipatedExams",
+            "Basic Level Full Amount": "basicLevelFullAmount",
+            "Basic Level Paid Amount": "basicLevelAmountPaid",
+            "Basic Level Amount Paid Online": "basicLevelAmountPaidOnline",
+            "Is Basic Level Concession Given": "isBasicLevelConcessionGiven",
+            "Concession Reason": "concessionReason",
+            "Parents Working School": "ParentsWorkingschool",
+            Designation: "designation",
+            City: "city",
+            "Advance Level Paid Amount": "advanceLevelAmountPaid",
+            "Advance Level Amount Paid Online": "advanceLevelAmountPaidOnline",
+            "Total Amount Paid": "totalAmountPaid",
+            "Total Amount Paid Online": "totalAmountPaidOnline",
         };
 
         const requiredColumns = ["studentName", "rollNo", "schoolCode", "section"];
