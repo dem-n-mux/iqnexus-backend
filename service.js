@@ -318,3 +318,56 @@ async function fetchSchoolData(code) {
     return { error: "Failed to fetch school data", details: error.message };
   }
 }
+
+
+export async function fetchSchoolNames(examLevel) {
+  if (!examLevel) {
+    throw new Error("examLevel is required");
+  }
+
+  const query = {};
+
+  if (examLevel === "L1") {
+    query.$or = [
+      { IAOL1: "1" },
+      { ITSTL1: "1" },
+      { IMOL1: "1" },
+      { IGKOL1: "1" },
+      { IENGOL1: "1" },
+    ];
+  } else if (examLevel === "L2") {
+    query.$or = [
+      { IAOL2: "1" },
+      { ITSTL2: "1" },
+      { IMOL2: "1" },
+      { IENGOL2: "1" },
+    ];
+  } else {
+    throw new Error("Invalid exam level");
+  }
+
+  // Step 1: Get student records matching exam level
+  const students = await STUDENT_LATEST.find(query).select("schoolCode");
+
+  // Step 2: Extract unique school codes
+  const uniqueSchoolCodes = [
+    ...new Set(students.map((s) => s.schoolCode).filter(Boolean)),
+  ];
+
+  if (uniqueSchoolCodes.length === 0) {
+    return {
+      schoolNames: [],
+      totalSchools: 0,
+    };
+  }
+
+  // Step 3: Get school names from School model
+  const schoolNames = await School.find({
+    schoolCode: { $in: uniqueSchoolCodes },
+  }).select("schoolCode schoolName");
+
+  return {
+    schoolNames,
+    totalSchools: schoolNames.length,
+  };
+}

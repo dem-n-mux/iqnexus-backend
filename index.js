@@ -5,7 +5,11 @@ import fs from "fs/promises";
 import jwt from "jsonwebtoken"
 
 import dotenv from "dotenv";
-import { fetchDataByMobile, fetchKgDataByMobile } from "./service.js";
+import {
+   fetchDataByMobile,
+  fetchKgDataByMobile,
+  fetchSchoolNames,
+} from "./service.js";
 import {
   generateAdmitCard,
   dbConnection,
@@ -202,6 +206,36 @@ async function getAdmitCardStudentsByFilters(schoolCode, examLevel, page, limit)
   };
 }
 
+app.post("/all-schools", async (req, res) => {
+  const { examLevel } = req.body;
+  console.log(examLevel);
+  // Validate examLevel
+  if (!examLevel || !["L1", "L2"].includes(examLevel)) {
+    return res.status(400).json({ error: "Invalid exam level: must be L1 or L2" });
+  }
+
+  try {
+    const { schoolNames, totalSchools } = await fetchSchoolNames(examLevel);
+
+    if (totalSchools > 0) {
+      return res.status(200).json({
+        message: "Schools found",
+        totalSchools,
+        schools: schoolNames,
+      });
+    } else {
+      return res.status(200).json({
+        message: "No school found",
+        totalSchools: 0,
+        schools: [],
+      });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.post("/admit-card-students", async (req, res) => {
   try {
     const { schoolCode, examLevel /*, session */ } = req.body;
@@ -251,7 +285,7 @@ app.post("/admit-card-students", async (req, res) => {
   }
 });
 
-// Tushar
+
 const examNameMapping = {
   IQMO: 'IMO',
   IQSO: 'ITST',
@@ -565,8 +599,6 @@ app.put('/kindergarten-student', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
-
-// Tushar
 
 // API to update single student
 app.put("/student", async (req, res) => {
