@@ -7,22 +7,20 @@ import { promises as fsPromises } from "fs";
 export async function excelToMongoDbForKindergarten(filePath) {
     try {
         const renameFields = {
-            "Student Name": "studentName",
+
             "Roll No": "rollNo",
             "School Code": "schoolCode",
-            Section: "section",
-            "Mother Name": "motherName",
-            "Father Name": "fatherName",
-            DOB: "dob",
-            "Mobile": "mobNo",
-            City: "city",
-            IQKG: "IQKG",
-            Duplicates: "Duplicates",
             Class: "class",
+            Section: "section",
+            "Student Name": "studentName",
+            "Father Name": "fatherName",
+            "Mother Name": "motherName",
+            DOB: "dob",
+            "Mob No": "mobNo",
+            "IQKD Book": "iqkdBook",
             "Total Basic Level Participated Exams": "totalBasicLevelParticipatedExams",
             "Basic Level Full Amount": "basicLevelFullAmount",
             "Basic Level Paid Amount": "basicLevelAmountPaid",
-            "Basic Level Amount Paid Online": "basicLevelAmountPaidOnline",
             "Is Basic Level Concession Given": "isBasicLevelConcessionGiven",
             "Concession Reason": "concessionReason",
             "Parents Working School": "ParentsWorkingschool",
@@ -41,8 +39,7 @@ export async function excelToMongoDbForKindergarten(filePath) {
             "dob",
             "mobNo",
             "city",
-            "IQKG",
-            "Duplicates",
+            "IQKD Book",
             "class",
         ];
         const allColumns = [...requiredColumns, ...optionalColumns];
@@ -82,7 +79,7 @@ export async function excelToMongoDbForKindergarten(filePath) {
                     }
                 })
                 .on("data", (row) => {
-                    console.log("CSV Row:", row); // Debug row
+                    console.log("CSV Row:", row);
                     students.push(row);
                 })
                 .on("end", resolve)
@@ -90,7 +87,7 @@ export async function excelToMongoDbForKindergarten(filePath) {
         });
 
         // Validate and transform student data
-        const validSections = ["LKG", "UKG", "PG"];
+        const validSections = ["LK", "UK", "PG"];
         const invalidRecords = [];
         const processedStudents = students.map((student, index) => {
             const rowNum = index + 2;
@@ -102,6 +99,7 @@ export async function excelToMongoDbForKindergarten(filePath) {
             if (!student.rollNo) {
                 errors.push(`Row ${rowNum}: rollNo is required`);
             }
+
             let schoolCode = null;
             if (student.schoolCode) {
                 const parsedCode = parseInt(student.schoolCode);
@@ -115,25 +113,13 @@ export async function excelToMongoDbForKindergarten(filePath) {
             } else {
                 errors.push(`Row ${rowNum}: schoolCode is required`);
             }
+
             if (!student.section || !validSections.includes(student.section)) {
-                errors.push(`Row ${rowNum}: section must be LKG, UKG, or PG`);
+                errors.push(`Row ${rowNum}: section must be LK, UK, or PG`);
             }
-            if (student.class && student.class !== "KG") {
-                errors.push(`Row ${rowNum}: class must be KG`);
-            }
-            if (
-                student.IQKG &&
-                !["0", "1", "yes", "no"].includes(String(student.IQKG).toLowerCase())
-            ) {
-                errors.push(`Row ${rowNum}: IQKG must be 0, 1, yes, or no`);
-            }
-            if (
-                student.Duplicates &&
-                !["true", "false", "0", "1"].includes(
-                    String(student.Duplicates).toLowerCase()
-                )
-            ) {
-                errors.push(`Row ${rowNum}: Duplicates must be true or false`);
+
+            if (student.class && student.class !== "KD") {
+                errors.push(`Row ${rowNum}: class must be KD`);
             }
 
             if (errors.length > 0) {
@@ -145,26 +131,28 @@ export async function excelToMongoDbForKindergarten(filePath) {
             }
 
             return {
-                rollNo: student.rollNo ? String(student.rollNo).trim() : "",
+                rollNo: student.rollNo?.trim() || "",
                 schoolCode,
-                class: "KG",
-                section: student.section ? String(student.section).trim() : "",
-                studentName: student.studentName ? String(student.studentName).trim() : "",
-                motherName: student.motherName ? String(student.motherName).trim() : "",
-                fatherName: student.fatherName ? String(student.fatherName).trim() : "",
-                dob: student.dob ? String(student.dob).trim() : "",
-                mobNo: student.mobNo ? String(student.mobNo).trim() : "",
-                city: student.city ? String(student.city).trim() : "",
-                IQKG: student.IQKG
-                    ? String(student.IQKG).toLowerCase() === "yes" ||
-                        String(student.IQKG) === "1"
-                        ? "1"
-                        : "0"
-                    : "0",
-                Duplicates: student.Duplicates
-                    ? String(student.Duplicates).toLowerCase() === "true" ||
-                    String(student.Duplicates) === "1"
-                    : false,
+                class: "KD",
+                section: student.section?.trim() || "",
+                studentName: student.studentName?.trim() || "",
+                fatherName: student.fatherName?.trim() || "",
+                motherName: student.motherName?.trim() || "",
+                dob: student.dob?.trim() || "",
+                mobNo: student.mobNo?.trim() || "",
+                iqkdBook: student.iqkdBook?.trim() || "",
+                totalBasicLevelParticipatedExams: student.totalBasicLevelParticipatedExams?.trim() || "",
+                basicLevelFullAmount: student.basicLevelFullAmount?.trim() || "",
+                basicLevelAmountPaid: student.basicLevelAmountPaid?.trim() || "",
+                isBasicLevelConcessionGiven: student.isBasicLevelConcessionGiven?.trim() || "",
+                concessionReason: student.concessionReason?.trim() || "",
+                ParentsWorkingschool: student.ParentsWorkingschool?.trim() || "",
+                designation: student.designation?.trim() || "",
+                city: student.city?.trim() || "",
+                advanceLevelAmountPaid: student.advanceLevelAmountPaid?.trim() || "",
+                advanceLevelAmountPaidOnline: student.advanceLevelAmountPaidOnline?.trim() || "",
+                totalAmountPaid: student.totalAmountPaid?.trim() || "",
+                totalAmountPaidOnline: student.totalAmountPaidOnline?.trim() || "",
             };
         });
 

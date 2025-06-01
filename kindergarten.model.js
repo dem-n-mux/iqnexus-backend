@@ -9,10 +9,6 @@ const KindergartenStudentSchema = new Schema(
             trim: true,
             unique: true,
         },
-        Duplicates: {
-            type: Boolean,
-            default: false,
-        },
         schoolCode: {
             type: Number,
             required: true,
@@ -21,25 +17,25 @@ const KindergartenStudentSchema = new Schema(
             type: String,
             required: true,
             trim: true,
-            enum: ["KG"],
+            enum: ["KD"],
         },
         section: {
             type: String,
             required: true,
             trim: true,
-            enum: ["LKG", "UKG", "PG"],
+            enum: ["LK", "UK", "PG"],
         },
         studentName: {
             type: String,
             required: true,
             trim: true,
         },
-        motherName: {
+        fatherName: {
             type: String,
             trim: true,
             default: "",
         },
-        fatherName: {
+        motherName: {
             type: String,
             trim: true,
             default: "",
@@ -54,36 +50,7 @@ const KindergartenStudentSchema = new Schema(
             trim: true,
             default: "",
         },
-        IQKG1: {
-            type: String,
-            trim: true,
-            default: "0",
-        },
-        IQKG2: {
-            type: String,
-            trim: true,
-            default: "0",
-        },
-        city: {
-            type: String,
-            trim: true,
-            default: "",
-        }, advanceLevelAmountPaid: {
-            type: String,
-            trim: true,
-            default: "",
-        },
-        advanceLevelAmountPaidOnline: {
-            type: String,
-            trim: true,
-            default: "",
-        },
-        totalAmountPaid: {
-            type: String,
-            trim: true,
-            default: "",
-        },
-        totalAmountPaidOnline: {
+        iqkdBook: {
             type: String,
             trim: true,
             default: "",
@@ -103,11 +70,6 @@ const KindergartenStudentSchema = new Schema(
             trim: true,
             default: "0",
         },
-        basicLevelAmountPaidOnline: {
-            type: String,
-            trim: true,
-            default: "",
-        },
         isBasicLevelConcessionGiven: {
             type: String,
             trim: true,
@@ -118,17 +80,37 @@ const KindergartenStudentSchema = new Schema(
             trim: true,
             default: "",
         },
-        remark: {
-            type: String,
-            trim: true,
-            default: "",
-        },
         ParentsWorkingschool: {
             type: String,
             trim: true,
             default: "",
         },
         designation: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        city: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        advanceLevelAmountPaid: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        advanceLevelAmountPaidOnline: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        totalAmountPaid: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        totalAmountPaidOnline: {
             type: String,
             trim: true,
             default: "",
