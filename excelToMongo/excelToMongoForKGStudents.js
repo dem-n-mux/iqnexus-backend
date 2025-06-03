@@ -1,4 +1,4 @@
-import { KINDERGARTEN_STUDENT } from "./kindergarten.model.js"
+import { KINDERGARTEN_STUDENT } from "../models/kindergarten.model.js"
 import fs from "fs";
 import { parse } from "csv-parse";
 import mongoose from "mongoose";

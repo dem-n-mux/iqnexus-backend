@@ -9,28 +9,28 @@ import {
    fetchDataByMobile,
   fetchKgDataByMobile,
   fetchSchoolNames,
-} from "./service.js";
+} from "./services/studentService.js";
 import {
   generateAdmitCard,
   dbConnection,
   uploadAdmitCard,
   fetchAdmitCardFromDB,
-} from "./admitCardService.js";
-import { generateAndUploadDocument, fetchImage } from "./certificateService.js";
-import { fetchStudyMaterial, StudyMaterial } from "./studyMaterialService.js";
-import { excelToMongoDbForStudent } from "./excelToMongoForStudent.js";
-import { excelToMongoDbForKindergarten } from "./excelToMongoForKGStudents.js"
+} from "./services/admitCardService.js";
+import { generateAndUploadDocument, fetchImage } from "./services/certificateService.js";
+import { fetchStudyMaterial, StudyMaterial } from "./services/studyMaterialService.js";
+import { excelToMongoDbForStudent } from "./excelToMongo/excelToMongoForStudent.js";
+import { excelToMongoDbForKindergarten } from "./excelToMongo/excelToMongoForKGStudents.js"
 import {
   STUDENT_LATEST,
   getStudentsByFilters,
-} from "./newStudentModel.model.js";
+} from "./models/newStudentModel.model.js";
 import mongoose from "mongoose";
-import { School } from "./school.js";
-import { convertXlsxToMongoDbForSchool } from "./excelToMongoForSchool.js";
-import { Admin } from "./admin.js";
+import { School } from "./models/schoolModel.js";
+import { convertXlsxToMongoDbForSchool } from "./excelToMongo/excelToMongoForSchool.js";
+import { Admin } from "./models/admin.js";
 import { Int32 } from "mongodb";
 import { MongoClient, GridFSBucket, ObjectId } from "mongodb";
-import { KINDERGARTEN_STUDENT } from "./kindergarten.model.js"
+import { KINDERGARTEN_STUDENT } from "./models/kindergarten.model.js"
 
 dotenv.config();
 
@@ -51,7 +51,7 @@ app.use(express.json());
 // MongoDB Connection
 if (!process.env.MONGO_URI) {
   console.error("Error: MONGO_URI is not defined in .env file");
-  process.exit(1); // Exit the process if MONGO_URI is missing
+  process.exit(1);
 }
 
 mongoose
@@ -208,7 +208,6 @@ async function getAdmitCardStudentsByFilters(schoolCode, examLevel, page, limit)
 
 app.post("/all-schools", async (req, res) => {
   const { examLevel } = req.body;
-  console.log(examLevel);
   // Validate examLevel
   if (!examLevel || !["L1", "L2"].includes(examLevel)) {
     return res.status(400).json({ error: "Invalid exam level: must be L1 or L2" });

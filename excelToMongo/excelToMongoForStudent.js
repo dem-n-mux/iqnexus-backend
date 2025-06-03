@@ -1,6 +1,6 @@
 import fs from "fs";
 import { parse } from "csv-parse";
-import { STUDENT_LATEST } from "./newStudentModel.model.js"
+import { STUDENT_LATEST } from "../models/newStudentModel.model.js"
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
