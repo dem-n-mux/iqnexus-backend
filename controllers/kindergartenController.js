@@ -1,19 +1,20 @@
 import { KINDERGARTEN_STUDENT } from "../models/kindergarten.model.js";
-import { excelToMongoDbForKindergarten } from "../excelToMongo/excelToMongoForKGStudents.js";
+import { excelToMongoDbForKindergarten } from "../utils/excelToMongoForKGStudents.js";
 import fs from "fs/promises";
 
 export const getKindergartenStudents = async (req, res) => {
   const { schoolCode, rollNo, section, studentName, IQKG } = req.body;
+  console.log("Request body:", req.body);
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
 
-  const query = { class: "KG" };
+  const query = { class: "KD" };
   if (schoolCode) query.schoolCode = Number(schoolCode);
   if (rollNo) query.rollNo = { $regex: rollNo.trim(), $options: "i" };
   if (section?.length > 0) query.section = { $in: section };
   if (studentName) query.studentName = { $regex: studentName.trim(), $options: "i" };
   if (IQKG) query.IQKG = IQKG;
-
+console.log("Query:", query);
   try {
     const students = await KINDERGARTEN_STUDENT.find(query).skip((page - 1) * limit).limit(limit).lean();
     const totalStudents = await KINDERGARTEN_STUDENT.countDocuments(query);
