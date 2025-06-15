@@ -1,5 +1,5 @@
 import { KINDERGARTEN_STUDENT } from "../models/kindergarten.model.js";
-import { excelToMongoDbForKindergarten } from "../excelToMongo/excelToMongoForKGStudents.js";
+import { excelToMongoDbForKindergarten } from "../utils/excelToMongoForKGStudents.js";
 import fs from "fs/promises";
 
 export const getKindergartenStudents = async (req, res) => {

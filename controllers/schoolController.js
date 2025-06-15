@@ -1,6 +1,6 @@
 import { School } from "../models/schoolModel.js";
 import { fetchSchoolNames } from "../services/studentService.js";
-import { convertXlsxToMongoDbForSchool } from "../excelToMongo/excelToMongoForSchool.js";
+import { convertXlsxToMongoDbForSchool } from "../utils/excelToMongoForSchool.js";
 import fs from "fs/promises";
 import { Int32 } from "mongodb";
 
