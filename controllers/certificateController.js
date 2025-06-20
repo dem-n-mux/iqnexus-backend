@@ -8,12 +8,13 @@ export const fetchCertificate = async (req, res) => {
 
   try {
     let studentData = studentCache[mobNo] || (await fetchDataByMobile(mobNo));
-    if (!studentData || !studentData["Mob No"]) {
+ 
+    if (!studentData || !studentData["Mob No"] || !studentData[0]["Mob No"]) {
       return res.status(404).json({ error: "No student found with this mobile number" });
     }
-    studentCache[mobNo] = studentData;
+    studentCache[mobNo] = studentData[0] ? studentData[0] : studentData;
 
-    const studentName = studentData["Student's Name"];
+    const studentName =studentData[0]?  studentData[0]["Student's Name"]: studentData["Student's Name"];
     if (!studentName) {
       return res.status(400).json({ error: "Invalid student details in cache" });
     }

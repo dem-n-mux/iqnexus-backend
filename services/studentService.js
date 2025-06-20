@@ -25,10 +25,18 @@ export async function fetchDataByMobile(mobNo) {
     }
     console.log("Data fetched from MongoDB:", data);
     // Fetch school data using the schoolCode (assumed to be a Number)
-    const schoolData = await fetchSchoolData(data.schoolCode);
+    
+    const schoolData= await  Promise.all(data.map(async (item) => {
+          return await fetchSchoolData(item.schoolCode);
+    })
+  )
 
+    console.log("School data fetched from MongoDB:", schoolData);
     // Prepare the response data
-    const extractedData = {
+    
+    const extractedData = data.map((data ,index) => {
+      return (
+        {
       "Roll No": data.rollNo || "Unknown",
       Duplicates: data.Duplicates !== undefined ? data.Duplicates : false,
       "School Code": data.schoolCode || "",
@@ -76,13 +84,16 @@ export async function fetchDataByMobile(mobNo) {
       "Total Amount Paid": data.totalAmountPaid || "",
       "Total Amount Paid Online": data.totalAmountPaidOnline || "",
       // School data fields
-      "School City": schoolData?.city?.trim() || "Unknown",
-      Country: schoolData?.country?.trim() || "Unknown",
-      School: schoolData?.schoolName?.trim() || "Unknown",
-      Area: schoolData?.area?.trim() || "Unknown",
-      Incharge: schoolData?.incharge?.trim() || "Unkown",
-      Principal: schoolData?.principalName?.trim() || "Unkown",
-    };
+      "School City": schoolData[index]?.city?.trim() || "Unknown",
+      Country: schoolData[index]?.country?.trim() || "Unknown",
+      School: schoolData[index]?.schoolName?.trim() || "Unknown",
+      Area: schoolData[index]?.area?.trim() || "Unknown",
+      Incharge: schoolData[index]?.incharge?.trim() || "Unkown",
+      Principal: schoolData[index]?.principalName?.trim() || "Unkown",
+        }
+      )
+    }
+    )
 
     return extractedData;
   } catch (error) {
