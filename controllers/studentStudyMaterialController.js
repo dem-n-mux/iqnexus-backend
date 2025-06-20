@@ -6,6 +6,7 @@ AWS.config.update({
   secretAccessKey: process.env.AWS_SECRET,
   region: process.env.AWS_REGION,
 });
+const s3 = new AWS.S3();
 export const addStudentStudyMaterial = async (req, res) => {
 
 const { name, age ,className, subject ,fee   } = req.body;
@@ -34,7 +35,7 @@ const { name, age ,className, subject ,fee   } = req.body;
 
 });
 
-
+console.log(result.Location)
     res.json({
       message: "Upload successful",
       url: result.Location,

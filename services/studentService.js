@@ -17,13 +17,13 @@ export async function fetchDataByMobile(mobNo) {
     }
 
     // Query the student_data_latests collection using Mongoose
-    const data = await STUDENT_LATEST.findOne({ mobNo: mobileNumber });
+    const data = await STUDENT_LATEST.find({ mobNo: mobileNumber });
 
     if (!data) {
       console.warn("⚠ No student found for Mobile No:", mobileNumber);
       return { error: "No student found with this mobile number" };
     }
-
+    console.log("Data fetched from MongoDB:", data);
     // Fetch school data using the schoolCode (assumed to be a Number)
     const schoolData = await fetchSchoolData(data.schoolCode);
 

@@ -6,6 +6,7 @@ import admitCardRoutes from "./admitCardRoutes.js";
 import certificateRoutes from "./certificateRoutes.js";
 import schoolRoutes from "./schoolRoutes.js";
 import adminRoutes from "./adminRoutes.js";
+import studyroutes from "./studentStudyMaterialRoute.js"
 
 const router = express.Router();
 
@@ -15,5 +16,6 @@ router.use("/", admitCardRoutes);
 router.use("/", certificateRoutes);
 router.use("/", schoolRoutes);
 router.use("/", adminRoutes);
+router.use("/", studyroutes);
 
 export default router;
