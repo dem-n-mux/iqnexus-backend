@@ -209,6 +209,7 @@ export const getStudentsByFilters = async (
   section,
   studentName,
   subject,
+  examLevel,
   page = 1,
   limit = 10
 ) => {
@@ -262,6 +263,34 @@ export const getStudentsByFilters = async (
       $or: [{ [field1]: { $in: [1, "1"] } }, { [field2]: { $in: [1, "1"] } }],
     });
   }
+  //exam Level filter
+  if(examLevel){
+     if (examLevel === "L1") {
+
+matchConditions.push({
+$or :[
+      { IAOL1: "1" },
+      { ITSTL1: "1" },
+      { IMOL1: "1" },
+      { IGKOL1: "1" },
+      { IENGOL1: "1" },
+    ]
+  })
+  
+  } else {
+
+    matchConditions.push({
+$or : [
+      { IAOL2: "1" },
+      { ITSTL2: "1" },
+      { IMOL2: "1" },
+      { IENGOL2: "1" },
+    ]
+
+  })
+  
+  }
+}
 
   // Aggregation pipeline
   const pipeline = [];

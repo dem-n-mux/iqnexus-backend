@@ -42,7 +42,7 @@ export const getStudentByMobile = async (req, res) => {
 
 export const getStudents = async (req, res) => {
   try {
-    const { schoolCode, className, rollNo, section, studentName, subject } = req.body;
+    const { schoolCode, className, rollNo, section, studentName, subject,examLevel } = req.body;
     const { page = 1, limit = 10 } = req.query;
 
     const schoolCodeNumber = schoolCode ? parseInt(schoolCode) : undefined;
@@ -51,7 +51,7 @@ export const getStudents = async (req, res) => {
     }
 
     const students = await getStudentsByFilters(
-      schoolCodeNumber, className, rollNo, section, studentName, subject,
+      schoolCodeNumber, className, rollNo, section, studentName, subject,examLevel,
       Number(page), Number(limit)
     );
 
