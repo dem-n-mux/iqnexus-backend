@@ -25,13 +25,13 @@ export const getStudentByMobile = async (req, res) => {
 
   try {
     let studentData = await fetchDataByMobile(mobNo);
-    if (!studentData || !studentData["Mob No"]) {
+    if (!studentData || !studentData[0]["Mob No"]) {
       studentData = await fetchKgDataByMobile(mobNo);
     }
 
-    if (studentData && studentData["Mob No"]) {
-      studentCache[mobNo] = studentData;
-      return res.status(200).json({ studentData, mobile: studentData["Mob No"] });
+    if (studentData && studentData[0]["Mob No"]) {
+      // studentCache[mobNo] = studentData;
+      return res.status(200).json({ studentData, mobile: studentData[0]["Mob No"] });
     }
 
     return res.status(404).json({ error: "No student found with this mobile number" });

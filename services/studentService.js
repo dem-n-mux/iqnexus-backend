@@ -113,7 +113,7 @@ export async function fetchKgDataByMobile(mobNo) {
     }
 
     // Query the student_data_latests collection using Mongoose
-    const data = await KINDERGARTEN_STUDENT.findOne({ mobNo: mobileNumber });
+    const data = await KINDERGARTEN_STUDENT.find({ mobNo: mobileNumber });
 
     if (!data) {
       console.warn("⚠ No student found for Mobile No:", mobileNumber);
@@ -121,10 +121,16 @@ export async function fetchKgDataByMobile(mobNo) {
     }
 
     // Fetch school data using the schoolCode (assumed to be a Number)
-    const schoolData = await fetchSchoolData(data.schoolCode);
+    
+    const schoolData= await  Promise.all(data.map(async (item) => {
+          return await fetchSchoolData(item.schoolCode);
+    }))
 
     // Prepare the response data
-    const extractedData = {
+    
+       const extractedData = data.map((data ,index) => {
+      return (
+        {
       "Roll No": data.rollNo || "Unknown",
       Duplicates: data.Duplicates !== undefined ? data.Duplicates : false,
       "School Code": data.schoolCode || "",
@@ -137,13 +143,13 @@ export async function fetchKgDataByMobile(mobNo) {
       "Mob No": data.mobNo || "",
       "IQKG": data.IQKG !== undefined ? data.IQKG : "0",
       // School data fields
-      "School City": schoolData?.city?.trim() || "Unknown",
-      Country: schoolData?.country?.trim() || "Unknown",
-      School: schoolData?.schoolName?.trim() || "Unknown",
-      Area: schoolData?.area?.trim() || "Unknown",
-      Incharge: schoolData?.incharge?.trim() || "Unkown",
-      Principal: schoolData?.principalName?.trim() || "Unkown",
-    };
+      "School City": schoolData[index]?.city?.trim() || "Unknown",
+      Country: schoolData[index]?.country?.trim() || "Unknown",
+      School: schoolData[index]?.schoolName?.trim() || "Unknown",
+      Area: schoolData[index]?.area?.trim() || "Unknown",
+      Incharge: schoolData[index]?.incharge?.trim() || "Unkown",
+      Principal: schoolData[index]?.principalName?.trim() || "Unkown",
+    })})
 
     return extractedData;
   } catch (error) {

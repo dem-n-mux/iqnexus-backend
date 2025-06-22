@@ -5,8 +5,6 @@ import express from "express";
 const router = Router();
 
 router.post(
-  "/addStudentStudyMaterial",
-  addStudentStudyMaterial
-);
+  "/addStudentStudyMaterial", addStudentStudyMaterial);
 
 export default router;
