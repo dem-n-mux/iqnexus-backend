@@ -1,7 +1,7 @@
 import { STUDENT_LATEST, getStudentsByFilters } from "../models/newStudentModel.model.js";
 import { fetchDataByMobile, fetchKgDataByMobile } from "../services/studentService.js";
 import { School } from "../models/schoolModel.js";
-import { fetchStudyMaterial, StudyMaterial } from "../services/studyMaterialService.js";
+import { StudyMaterial } from "../services/studyMaterialService.js";
 
 const studentCache = {};
 const examNameMapping = {
