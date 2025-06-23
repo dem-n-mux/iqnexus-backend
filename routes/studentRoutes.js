@@ -9,6 +9,8 @@ import {
   updateStudent,
   addStudent
 } from "../controllers/studentController.js";
+import { storeFeedBack } from "../controllers/feedbackController.js";
+import { getFeedback } from "../controllers/feedbackController.js";
 
 const router = express.Router();
 
@@ -23,5 +25,6 @@ router.post("/all-students-no-pagination", getStudentsWithoutPagination);
 router.put("/student", updateStudent);
 router.post("/add-student", addStudent);
 router.get("/dashboard-analytics", getDashboardAnalytics);
-
+router.post("/feedback", storeFeedBack);
+router.get("/feedbacks", getFeedback);
 export default router;
