@@ -16,6 +16,10 @@ const asnswerSchema = new mongoose.Schema({
     questions: {
         type: Object,
         required: true
+    },
+    status: {
+        type: String,
+        default: "active"
     }
 }, { timestamps: true });
 

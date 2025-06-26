@@ -50,3 +50,16 @@ export const addStudentStudyMaterial = async (req, res) => {
     res.status(500).json({ error: "Upload failed" });
   }
 };
+export const fetchStudyMaterialForAdmin = async (req, res) => {
+
+  try {
+    const studyMaterials = await StudyMaterial.find({});
+    if (studyMaterials.length === 0) {
+      return res.status(404).json({ message: "No study materials found" });
+    }
+    res.json(studyMaterials);
+  } catch (error) {
+    console.error("Error fetching study materials:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}

@@ -15,8 +15,6 @@
   "dependencies": {
     "@types/node": "^22.13.13",
     "aws-sdk": "^2.1692.0",
-    "bcrypt": "^6.0.0",
-    "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "chrome-aws-lambda": "10.1.0",
     "concurrently": "^7.0.0",

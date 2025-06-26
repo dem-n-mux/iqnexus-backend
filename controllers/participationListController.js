@@ -1,4 +1,4 @@
-import { STUDENT_LATEST, getStudentsByFilters } from "../models/newStudentModel.model.js";
+import { STUDENT_LATEST } from "../models/newStudentModel.model.js";
 import { School } from "../models/schoolModel.js";
 
 const studentCache = {};
@@ -57,6 +57,7 @@ export const getParticipationFilteredList = async (req, res) => {
       console.log(query)
     }
     }
+            console.log("Advanced exams:");
 
         if(examLevel==="L2" && !exam){
     
@@ -67,20 +68,11 @@ export const getParticipationFilteredList = async (req, res) => {
           { value: "IMOL2" },
 
         ];
-                  
-                              const examConditions = [];
+          
+    const examConditions = [];
     for (const examObj of advExam) {
   
       const examValue = examObj?.value;
-
-      const levelMatch = examValue.match(/(L1|L2)$/);
-      const examName = examValue.replace(/(L1|L2)$/, '');
-
-      if (!levelMatch) {
-          
-        return res.status(400).json({ message: `Invalid exam format or name: ${examValue}` });
-      }
-
   
       examConditions.push({ [examValue]: "1" });
       // Directly add each required exam to the query

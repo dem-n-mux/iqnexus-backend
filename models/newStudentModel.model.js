@@ -22,6 +22,48 @@ const StudentSchema = new Schema(
       required: true,
       trim: true,
     },
+    result:{
+      
+      IAOL1:{
+        marksObtained: Number,
+        totalMarks: Number,
+      },
+      IAOL2: {
+        marksObtained: Number,
+        totalMarks: Number,
+      },
+      ITSTL1: {
+        marksObtained: Number,
+        totalMarks: Number,
+        
+    },
+      ITSTL2: {
+        marksObtained: Number,
+        totalMarks: Number,
+      },
+      IMOL1:{
+        marksObtained: Number,
+        totalMarks: Number,
+      },
+      IMOL2: {
+        marksObtained: Number,
+        totalMarks: Number,
+      },
+      IGKOL1: {
+        marksObtained: Number,
+        totalMarks: Number,
+      },
+      IENGOL1:{
+        marksObtained: Number,
+        totalMarks: Number,
+      }
+      ,
+      IENGOL2: {
+        marksObtained: Number,
+        totalMarks: Number,
+      },
+
+  },
     section: {
       type: String,
       required: true,
