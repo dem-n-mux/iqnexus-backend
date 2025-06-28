@@ -33,6 +33,7 @@ export const uploadResult = async (req, res) => {
     const rollNo = row["roll no"];
     const marksObtained = Number(row["marks obtained"]);
     const totalMarks = Number(row["total marks"]);
+    const passOrFail= row["pass or fail"];
 
     if (!rollNo || isNaN(marksObtained) || isNaN(totalMarks)) continue;
 
