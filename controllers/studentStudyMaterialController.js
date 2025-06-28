@@ -33,7 +33,7 @@ export const addStudentStudyMaterial = async (req, res) => {
       class: className,
       examId: subject,
       cost: fee,
-      pdfLink: result.Location,
+      pdfLink: result.Location, // Store the file as binary data
     });
     resultMongo.save();
     console.log("File uploaded successfully. Location:", result.Location);

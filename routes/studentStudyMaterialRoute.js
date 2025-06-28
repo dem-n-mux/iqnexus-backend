@@ -6,6 +6,6 @@ const router = Router();
 
 router.post("/addStudentStudyMaterial", addStudentStudyMaterial);
 router.post("/fetchStudyMaterial", fetchStudyMaterial);
-router.post('/fetchAdminStudyMaterial',fetchStudyMaterialForAdmin )
+router.get('/fetchAdminStudyMaterial',fetchStudyMaterialForAdmin )
 
 export default router;

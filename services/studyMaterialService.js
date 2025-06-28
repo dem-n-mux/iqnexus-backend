@@ -15,7 +15,7 @@ const studyMaterialSchema = new mongoose.Schema({
   cost: Number,
   strikeThroughCost: Number,
   isAvailableForFree: String,
-  pdfLink:  String
+  pdfLink: String,
 });
 
 const StudyMaterial = mongoose.model(

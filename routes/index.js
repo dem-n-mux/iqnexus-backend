@@ -8,6 +8,7 @@ import schoolRoutes from "./schoolRoutes.js";
 import studyroutes from "./studentStudyMaterialRoute.js"
 import answerRoutes from "./answerRoutes.js";
 import participationRoutes from "./participationListRoutes.js";
+import feedbackRoutes from "./feedBackRoute.js";
 const router = express.Router();
 
 router.use("/", studentRoutes);
@@ -20,4 +21,5 @@ router.use("/", studyroutes);
 router.use("/", answerRoutes);
 router.use("/", participationRoutes);
 router.use("/",resultRoutes);
+router.use("/", feedbackRoutes);
 export default router;
