@@ -2,6 +2,7 @@ import { STUDENT_LATEST, getStudentsByFilters } from "../models/newStudentModel.
 import { fetchDataByMobile, fetchKgDataByMobile } from "../services/studentService.js";
 import { School } from "../models/schoolModel.js";
 import { StudyMaterial } from "../services/studyMaterialService.js";
+import { TeacherIncharge } from "../models/TeacherInchanrgeModel.js";
 
 const studentCache = {};
 const examNameMapping = {
@@ -212,8 +213,8 @@ export const getAttendanceStudents = async (req, res) => {
   
     try {
       // Find school
-      const school = await School.findOne({ schoolCode }) || {};
-  
+      const school = await TeacherIncharge.findOne({ schoolCode }) || {};
+      
       // Build query
       const query = { schoolCode };
   
@@ -236,6 +237,7 @@ export const getAttendanceStudents = async (req, res) => {
   
       // Fetch students
       const students = await STUDENT_LATEST.find(query);
+      console.log("Fetched students:", students);
       return res.status(200).json({ student: students, school });
     } catch (err) {
       res.status(500).json({ message: 'Server error', error: err.message });
