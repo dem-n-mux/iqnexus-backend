@@ -47,6 +47,8 @@ export const uploadResult = async (req, res) => {
         $set: {
           [`result.${resultKey}.marksObtained`]: marksObtained,
           [`result.${resultKey}.totalMarks`]: totalMarks,
+          [`result.${resultKey}.passOrFail`]: passOrFail,
+   
         },
       },
       { new: true }

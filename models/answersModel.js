@@ -17,10 +17,6 @@ const asnswerSchema = new mongoose.Schema({
         type: Object,
         required: true
     },
-    status: {
-        type: String,
-        default: "active"
-    }
 }, { timestamps: true });
 
 export const answersModel= mongoose.model('Question', asnswerSchema);

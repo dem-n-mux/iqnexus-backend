@@ -27,40 +27,49 @@ const StudentSchema = new Schema(
       IAOL1:{
         marksObtained: Number,
         totalMarks: Number,
+        passOrFail: String,
       },
       IAOL2: {
         marksObtained: Number,
         totalMarks: Number,
+        passOrFail: String,
       },
       ITSTL1: {
         marksObtained: Number,
         totalMarks: Number,
+        passOrFail: String,
         
     },
       ITSTL2: {
         marksObtained: Number,
         totalMarks: Number,
+        passOrFail: String,
       },
       IMOL1:{
         marksObtained: Number,
         totalMarks: Number,
+        passOrFail: String,
       },
       IMOL2: {
         marksObtained: Number,
         totalMarks: Number,
+        passOrFail: String,
       },
       IGKOL1: {
         marksObtained: Number,
         totalMarks: Number,
+        passOrFail: String,
       },
       IENGOL1:{
         marksObtained: Number,
         totalMarks: Number,
+        passOrFail: String,
       }
       ,
       IENGOL2: {
         marksObtained: Number,
         totalMarks: Number,
+        passOrFail: String,
       },
 
   },
