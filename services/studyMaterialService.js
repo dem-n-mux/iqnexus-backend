@@ -24,63 +24,95 @@ const StudyMaterial = mongoose.model(
   "study-material"
 );
 
-async function fetchStudyMaterial(studentClass, studentName, mobNo) {
+async function fetchStudyMaterial(req, res) {
+  console.log("Fetching study material for class:", req.body);
+  const {  rollNo,className } = req.body;
+
   const studyMaterialArray=[]
-  if (!studentClass) {
+  if (!className) {
     console.error("🚨 Error: Class information not found for the student");
     throw new Error("Class information not found for the student");
   }
   try {
-    const materials = await StudyMaterial.find({ class: studentClass });
+    const materials = await StudyMaterial.find({  class: className });
     
     if (materials.length === 0) {
-      console.warn("⚠️ No study materials found for class:", studentClass);
+  
       throw new Error("No study materials found for this class");
     }
     else {
       const studentData= await STUDENT_LATEST.findOne({
-        studentName:studentName,
-        mobNo: mobNo
+        rollNo:rollNo,
+        class: className
       })
-      if(studentData.IAOL1Book === "1") {
+      if(studentData.IAOL1 === "1") {
     const material =StudyMaterial.find({
-      examId: "IAOL1Book",
+      examId: "IAOL1",
     })
     studyMaterialArray.push(material);
 
       }
-      if(studentData.ITSTL1Book === "1") {
+      if(studentData.ITSTL1 === "1") {
     const material = await StudyMaterial.find({
-      examId: "ITSTL1Book",
+      examId: "ITSTL1",
     });
     studyMaterialArray.push(material);
       }
-            if(studentData.IMOL1Book === "1") {
+            if(studentData.IMOL1 === "1") {
     const material = await StudyMaterial.find({
-      examId: "IMOL1Book",
+      examId: "IMOL1",
     });
     studyMaterialArray.push(material);
       }
-            if(studentData.IENGOL1Book === "1") {
+            if(studentData.IENGOL1 === "1") {
     const material = await StudyMaterial.find({
-      examId: "IENGOL1Book",
+      examId: "IENGOL1",
     });
     studyMaterialArray.push(material);
       }
-            if(studentData.IGKOL1Book === "1") {
+            if(studentData.IGKOL1 === "1") {
     const material = await StudyMaterial.find({
-      examId: "IGKOL1Book",
+      examId: "IGKOL1",
     });
+
     studyMaterialArray.push(material);
       }
+            if(studentData.IAOL2 === "1") {
+    const material = await StudyMaterial.find({
+      examId: "IAOL2",
+    });
+    studyMaterialArray.push(material);
+
+  }
+
+      if(studentData.ITSTL2 === "1") {
+    const material = await StudyMaterial.find({
+      examId: "ITSTL2",
+    });
+    studyMaterialArray.push(material);
+  }
+  
+      if(studentData.IMOL2 === "1") {
+    const material = await StudyMaterial.find({
+      examId: "IMOL2",
+    });
+    studyMaterialArray.push(material);
+  }
+      if(studentData.IENGOL2 === "1") {   
+    const material = await StudyMaterial.find({
+      examId: "IENGOL2",
+    });
+    studyMaterialArray.push(material);
+  }
 
 
     }
+    console.log("Study materials fetched successfully:", studyMaterialArray);
 
     return { success: true, data: studyMaterialArray };
   } catch (error) {
     console.error("❌ Error fetching study material:", error);
-    throw new Error("Internal server error");
+
   }
 }
 
