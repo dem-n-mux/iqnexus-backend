@@ -10,7 +10,7 @@ const teacherInchargeSchema = new mongoose.Schema({
     type: Number,
     unique: true,
   },
-  schoolcode: {
+  schoolCode: {
     type: Number,
     required: true,
   },

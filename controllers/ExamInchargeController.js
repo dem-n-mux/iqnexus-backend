@@ -115,6 +115,7 @@ export const createExamIncharge = async (req, res) => {
       success: true,
     });
   } catch (error) {
+    console.error("Error creating exam incharge:", error);
     res.status(400).json({
       success: false,
       message: error.message,
