@@ -26,7 +26,7 @@ export const getExamInchargeById = async (req, res) => {
 
 export const createExamIncharge = async (req, res) => {
   try {
-    if (req.body.schoolCode != undefined) {
+    if (req.body.schoolCode != undefined || req.body.schoolCode != '') {
       const schoolCode = Number(req.body.schoolCode);
 
       const className = req.body.class;
