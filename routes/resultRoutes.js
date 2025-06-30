@@ -5,6 +5,6 @@ import { fetchBLQList } from '../controllers/BLQListController.js';
 const router = express.Router();
 
 router.post('/uploadResult', uploadResult )
-router.post('/getResult', getResult) 
+router.get('/getResult', getResult) 
 router.get('/fetchBLQList', fetchBLQList);
 export default router;
