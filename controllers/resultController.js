@@ -42,6 +42,7 @@ export const uploadResult = async (req, res) => {
         rollNo: rollNo,
         class: studentClass,
         schoolCode: schoolCode,
+        
       },
       {
         $set: {

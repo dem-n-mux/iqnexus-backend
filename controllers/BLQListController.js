@@ -1,4 +1,5 @@
 import { STUDENT_LATEST } from "../models/newStudentModel.model.js";
+import { School } from "../models/schoolModel.js";
 
 const examNameMapping = {
   IQMO: "IMO",
@@ -10,6 +11,8 @@ const examNameMapping = {
 
 export const fetchBLQList = async (req, res) => {
   const { studentClass, schoolCode, examLevel, subject } = req.query;
+  console.log(JSON.parse(req.query.subject))
+  const subjectArray = JSON.parse(req.query.subject);
   const query = {};
   if (studentClass) {
     query.class = studentClass;
@@ -18,9 +21,15 @@ export const fetchBLQList = async (req, res) => {
     query.schoolCode = schoolCode;
   }
   if (subject) {
-    query.subject = subject;
-  }
-  if (examLevel) {
+    subjectArray.forEach((sub) => {
+      const examName =sub.value
+      if (examName) {
+        query[examName] = "1"; // Assuming "1" indicates participation
+      }
+    });
+      }
+  if (examLevel && subjectArray.length ==0) {
+    console.log("Exam Level:", examLevel);
     if (examLevel === "L1") {
       query.$or = [
         { IAOL1: "1" },
@@ -41,6 +50,7 @@ export const fetchBLQList = async (req, res) => {
   //for storing student data
   const studentData = [];
   try {
+    console.log("Query:", query);
     const student = await STUDENT_LATEST.find(query);
     student.map((s) => {
       if (examLevel === "L1") {
@@ -52,6 +62,8 @@ export const fetchBLQList = async (req, res) => {
             schoolCode: s.schoolCode,
             IAOL1: s.IAOL1,
             passOrFail: s.result.IAOL1.passOrFail,
+            fatherName: s.fatherName,
+            motherName: s.motherName,
           });
         }
         if (s.result.ITSTL1.marksObtained != undefined) {
@@ -139,7 +151,12 @@ export const fetchBLQList = async (req, res) => {
         }
       }
     });
-    res.status(200).json(studentData);
+
+  const schoolName= await School.findOne({
+      schoolCode: schoolCode
+    })
+    console.log("Student Data:", studentData);
+    res.status(200).json({studentData:studentData ,school:schoolName});
 
     if (!student) {
       return res.status(404).json({ error: "Student not found" });
