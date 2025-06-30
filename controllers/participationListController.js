@@ -14,10 +14,7 @@ export const getParticipationFilteredList = async (req, res) => {
   const { schoolCode, classes, sections, exam,examLevel } = req.body;
 
     console.log("Request body:", req.body);
-  // Validate required fields
-//   if (!schoolCode || !exam || !Array.isArray(exam) || exam.length === 0) {
-//     return res.status(400).json({ message: 'School code and exam(s) are required' });
-//   6
+
 
   try {
     // Find school

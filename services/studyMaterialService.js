@@ -46,7 +46,7 @@ async function fetchStudyMaterial(req, res) {
         class: className
       })
       if(studentData.IAOL1 === "1") {
-    const material =StudyMaterial.find({
+    const material =await StudyMaterial.find({
       examId: "IAOL1",
     })
     studyMaterialArray.push(material);
@@ -105,11 +105,14 @@ async function fetchStudyMaterial(req, res) {
     studyMaterialArray.push(material);
   }
 
-
     }
     console.log("Study materials fetched successfully:", studyMaterialArray);
+res.status(200).json({
+      success: true,
+      message: "Study materials fetched successfully",
+      data: studyMaterialArray,
+    });
 
-    return { success: true, data: studyMaterialArray };
   } catch (error) {
     console.error("❌ Error fetching study material:", error);
 
