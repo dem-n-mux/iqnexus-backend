@@ -64,6 +64,7 @@ export const fetchBLQList = async (req, res) => {
             passOrFail: s.result.IAOL1.passOrFail,
             fatherName: s.fatherName,
             motherName: s.motherName,
+            section:s.section
           });
         }
         if (s.result.ITSTL1.marksObtained != undefined) {
